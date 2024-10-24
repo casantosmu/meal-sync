@@ -1,12 +1,12 @@
 package main
 
 import (
-	"html/template"
 	"log/slog"
 	"net/http"
 	"os"
 
 	"github.com/casantosmu/meal-sync/database"
+	"github.com/casantosmu/meal-sync/views"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -26,20 +26,20 @@ func main() {
 		os.Exit(1)
 	}
 
+	view, err := views.New(logger)
+	if err != nil {
+		logger.Error("Unable to load templates", "error", err.Error())
+		os.Exit(1)
+	}
+
 	mux := http.NewServeMux()
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
-		data := struct {
-			Message string
-		}{
-			Message: "Hello world!!",
+		data := map[string]any{
+			"Message": "Hello world!!",
 		}
 
-		tmpl := template.Must(template.ParseFiles("./views/index.tmpl"))
-		err := tmpl.Execute(w, data)
-		if err != nil {
-			logger.Error(err.Error())
-		}
+		view.Render(w, r, http.StatusOK, "home.tmpl", data)
 	})
 
 	logger.Info("Starting server on :3000")
