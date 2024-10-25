@@ -5,7 +5,9 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/casantosmu/meal-sync/controllers"
 	"github.com/casantosmu/meal-sync/database"
+	"github.com/casantosmu/meal-sync/models"
 	"github.com/casantosmu/meal-sync/views"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -32,15 +34,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	mux := http.NewServeMux()
-	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
-	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
-		data := map[string]any{
-			"Message": "Hello world!!",
-		}
+	recipeModel := models.RecipeModel{DB: db}
+	recipeController := controllers.RecipeController{Logger: logger, Views: view, RecipeModel: recipeModel}
 
-		view.Render(w, r, http.StatusOK, "home.tmpl", data)
-	})
+	mux := http.NewServeMux()
+
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+	recipeController.Mount(mux)
 
 	logger.Info("Starting server on :3000")
 

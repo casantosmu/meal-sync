@@ -1,0 +1,105 @@
+{{define "title"}}Recipes{{end}}
+
+{{define "main"}}
+    <div class="d-flex justify-content-between align-items-center">
+        <h1 class="h2">My recipes</h1>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#recipeModal">
+            <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 448 512"
+                    fill="currentColor"
+                    width="1em"
+                    height="1em"
+                    class="me-1"
+            >
+                <path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 144L48 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l144 0 0 144c0 17.7 14.3 32 32 32s32-14.3 32-32l0-144 144 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-144 0 0-144z"/>
+            </svg>
+            Add
+        </button>
+    </div>
+
+    <form class="d-flex col-sm-7 col-lg-5 col-xl-4 pt-3" role="search" action="/" method="get">
+        <input class="form-control me-2" type="search" name="search" value="{{.Search}}" placeholder="Search"
+               aria-label="Search">
+        <button class="btn btn-outline-light" type="submit">Search</button>
+    </form>
+
+    {{if .Recipes}}
+        <nav>
+            <ul class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-xl-6 g-3 pt-4 list-unstyled">
+                {{range .Recipes}}
+                    <li class="col">
+                        <div class="card h-100">
+                            <img
+                                    src="{{.Img}}"
+                                    width="300"
+                                    height="300"
+                                    class="card-img-top img-fluid"
+                                    alt="{{.Title}}"
+                            >
+                            <div class="card-body">
+                                <a class="h6 text-reset text-decoration-none stretched-link" href="/recipes/{{.Id}}">
+                                    {{.Title}}
+                                </a>
+                            </div>
+                        </div>
+                    </li>
+                {{end}}
+            </ul>
+        </nav>
+    {{else}}
+        <div class="text-center pt-5">
+            {{if .Search}}
+                <p class="lead">No recipes found</p>
+                <p class="text-muted">Try searching for something else or add a new recipe</p>
+
+            {{else}}
+                <p class="lead">Add your first recipe</p>
+                <p class="text-muted">Start building your collection of favorite recipes</p>
+            {{end}}
+            <button
+                    type="button"
+                    class="btn btn-outline-light"
+                    data-bs-toggle="modal"
+                    data-bs-target="#recipeModal"
+            >
+                Add recipe
+            </button>
+        </div>
+    {{end}}
+
+    <div
+            class="modal fade"
+            id="recipeModal"
+            tabindex="-1"
+            aria-labelledby="recipeModalLabel"
+            aria-hidden="true"
+    >
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="recipeModalLabel">Add New Recipe</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="recipeForm" action="/recipes" method="post">
+                        <label for="recipeTitle" class="form-label">Title</label>
+                        <input
+                                type="text"
+                                class="form-control"
+                                id="recipeTitle"
+                                name="title"
+                                placeholder="e.g., Spaghetti Bolognese"
+                                required
+                        >
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success" form="recipeForm">
+                        Add Recipe
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{{end}}
