@@ -15,6 +15,21 @@ type RecipeModel struct {
 	DB *sql.DB
 }
 
+func (m RecipeModel) Create(title, img string) (int, error) {
+	query := `INSERT INTO recipes (title, img_url)
+	VALUES (?, ?)
+	RETURNING recipe_id;
+	`
+
+	var id int
+	err := m.DB.QueryRow(query, title, img).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
 func (m RecipeModel) Search(search string) ([]Recipe, error) {
 	query := "SELECT recipe_id, title, img_url FROM recipes"
 	var args []any
