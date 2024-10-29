@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/casantosmu/meal-sync/models"
@@ -19,6 +21,8 @@ type RecipeController struct {
 func (c RecipeController) Mount(srv *http.ServeMux) {
 	srv.HandleFunc("POST /recipes", c.createPOST)
 	srv.HandleFunc("GET /{$}", c.listGET)
+	srv.HandleFunc("GET /recipes/{id}/edit", c.updateGET)
+	srv.HandleFunc("PUT /recipes/{id}", c.updatePUT)
 }
 
 func (c RecipeController) createPOST(w http.ResponseWriter, r *http.Request) {
@@ -62,4 +66,84 @@ func (c RecipeController) listGET(w http.ResponseWriter, r *http.Request) {
 
 	data := map[string]any{"Recipes": list, "Search": search}
 	c.Views.Render(w, r, http.StatusOK, "recipe-list.tmpl", data)
+}
+
+func (c RecipeController) updateGET(w http.ResponseWriter, r *http.Request) {
+	idParam := r.PathValue("id")
+	if idParam == "" {
+		err := errors.New("expected id path value")
+		c.Views.ServerError(w, r, err)
+		return
+	}
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		c.Views.ClientError(w, r, http.StatusBadRequest)
+		return
+	}
+
+	recipe, err := c.RecipeModel.GetByPk(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			c.Views.ClientError(w, r, http.StatusNotFound)
+			return
+		}
+		c.Views.ServerError(w, r, err)
+		return
+	}
+
+	data := map[string]any{"Recipe": recipe}
+	c.Views.Render(w, r, http.StatusOK, "recipe-edit.tmpl", data)
+}
+
+func (c RecipeController) updatePUT(w http.ResponseWriter, r *http.Request) {
+	idParam := r.PathValue("id")
+	if idParam == "" {
+		err := errors.New("expected id path value")
+		c.Views.ServerError(w, r, err)
+		return
+	}
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		c.Views.ClientError(w, r, http.StatusBadRequest)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		c.Views.ServerError(w, r, err)
+		return
+	}
+
+	title := r.FormValue("title")
+	description := r.FormValue("description")
+	ingredients := r.FormValue("ingredients")
+	directions := r.FormValue("directions")
+
+	validationErrs := map[string]string{}
+
+	if strings.TrimSpace(title) == "" {
+		validationErrs["title"] = "Title must not be blank."
+	}
+
+	if len(validationErrs) > 0 {
+		c.Views.SetErrors(w, validationErrs)
+		http.Redirect(w, r, fmt.Sprintf("/recipes/%d/edit", id), http.StatusSeeOther)
+		return
+	}
+
+	err = c.RecipeModel.UpdateByPk(id, title, description, ingredients, directions)
+	if err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			c.Views.ClientError(w, r, http.StatusNotFound)
+			return
+		}
+		c.Views.ServerError(w, r, err)
+		return
+	}
+
+	c.Views.SetSuccessToast(w, "Your recipe has been saved.")
+
+	c.Logger.Info("Recipe updated", "id", id)
+	http.Redirect(w, r, fmt.Sprintf("/recipes/%d", id), http.StatusSeeOther)
 }

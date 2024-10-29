@@ -1,10 +1,10 @@
 CREATE TABLE recipes (
-    recipe_id INTEGER PRIMARY KEY,
-    title TEXT NOT NULL,
-    img_url TEXT NOT NULL,
-    description TEXT,
-    ingredients TEXT,
-    directions TEXT
+   recipe_id INTEGER PRIMARY KEY,
+   title TEXT NOT NULL,
+   img_url TEXT NOT NULL,
+   description TEXT,
+   ingredients TEXT,
+   directions TEXT
 );
 
 CREATE INDEX idx_recipes_title ON recipes(title, ingredients);

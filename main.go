@@ -44,9 +44,21 @@ func main() {
 
 	logger.Info("Starting server on :3000")
 
-	err = http.ListenAndServe(":3000", mux)
+	err = http.ListenAndServe(":3000", methodOverride(mux))
 	if err != nil {
 		logger.Error("Unable to start server", "error", err.Error())
 		os.Exit(1)
 	}
+}
+
+func methodOverride(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			method := r.PostFormValue("_method")
+			if method == "PUT" || method == "DELETE" {
+				r.Method = method
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
 }
