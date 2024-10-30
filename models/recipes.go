@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"errors"
+	"strings"
 )
 
 type Recipe struct {
@@ -12,6 +13,36 @@ type Recipe struct {
 	Description string
 	Ingredients string
 	Directions  string
+}
+
+func (r Recipe) IngredientsToList() []string {
+	lines := strings.Split(r.Ingredients, "\n")
+	ingredients := make([]string, 0, len(lines))
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed != "" {
+			ingredients = append(ingredients, trimmed)
+		}
+	}
+	if len(ingredients) == 0 {
+		return []string{""}
+	}
+	return ingredients
+}
+
+func (r Recipe) DirectionsToList() []string {
+	lines := strings.Split(r.Directions, "\n\n")
+	directions := make([]string, 0, len(lines))
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed != "" {
+			directions = append(directions, trimmed)
+		}
+	}
+	if len(directions) == 0 {
+		return []string{""}
+	}
+	return directions
 }
 
 type RecipeModel struct {

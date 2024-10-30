@@ -21,6 +21,7 @@ type RecipeController struct {
 func (c RecipeController) Mount(srv *http.ServeMux) {
 	srv.HandleFunc("POST /recipes", c.createPOST)
 	srv.HandleFunc("GET /{$}", c.listGET)
+	srv.HandleFunc("GET /recipes/{id}", c.getGET)
 	srv.HandleFunc("GET /recipes/{id}/edit", c.updateGET)
 	srv.HandleFunc("PUT /recipes/{id}", c.updatePUT)
 }
@@ -66,6 +67,34 @@ func (c RecipeController) listGET(w http.ResponseWriter, r *http.Request) {
 
 	data := map[string]any{"Recipes": list, "Search": search}
 	c.Views.Render(w, r, http.StatusOK, "recipe-list.tmpl", data)
+}
+
+func (c RecipeController) getGET(w http.ResponseWriter, r *http.Request) {
+	idParam := r.PathValue("id")
+	if idParam == "" {
+		err := errors.New("expected id path value")
+		c.Views.ServerError(w, r, err)
+		return
+	}
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		c.Views.ClientError(w, r, http.StatusBadRequest)
+		return
+	}
+
+	recipe, err := c.RecipeModel.GetByPk(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			c.Views.ClientError(w, r, http.StatusNotFound)
+			return
+		}
+		c.Views.ServerError(w, r, err)
+		return
+	}
+
+	data := map[string]any{"Recipe": recipe}
+	c.Views.Render(w, r, http.StatusOK, "recipe-details.tmpl", data)
 }
 
 func (c RecipeController) updateGET(w http.ResponseWriter, r *http.Request) {
