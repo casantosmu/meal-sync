@@ -135,3 +135,23 @@ func (m RecipeModel) UpdateByPk(id int, title, description, ingredients, directi
 
 	return nil
 }
+
+func (m RecipeModel) RemoveByPk(id int) error {
+	query := "DELETE FROM recipes WHERE recipe_id = ?;"
+
+	result, err := m.DB.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}

@@ -24,6 +24,7 @@ func (c RecipeController) Mount(srv *http.ServeMux) {
 	srv.HandleFunc("GET /recipes/{id}", c.getGET)
 	srv.HandleFunc("GET /recipes/{id}/edit", c.updateGET)
 	srv.HandleFunc("PUT /recipes/{id}", c.updatePUT)
+	srv.HandleFunc("DELETE /recipes/{id}", c.removeDELETE)
 }
 
 func (c RecipeController) createPOST(w http.ResponseWriter, r *http.Request) {
@@ -175,4 +176,34 @@ func (c RecipeController) updatePUT(w http.ResponseWriter, r *http.Request) {
 
 	c.Logger.Info("Recipe updated", "id", id)
 	http.Redirect(w, r, fmt.Sprintf("/recipes/%d", id), http.StatusSeeOther)
+}
+
+func (c RecipeController) removeDELETE(w http.ResponseWriter, r *http.Request) {
+	idParam := r.PathValue("id")
+	if idParam == "" {
+		err := errors.New("expected id path value")
+		c.Views.ServerError(w, r, err)
+		return
+	}
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		c.Views.ClientError(w, r, http.StatusBadRequest)
+		return
+	}
+
+	err = c.RecipeModel.RemoveByPk(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			c.Views.ClientError(w, r, http.StatusNotFound)
+			return
+		}
+		c.Views.ServerError(w, r, err)
+		return
+	}
+
+	c.Views.SetSuccessToast(w, "Your recipe has been deleted.")
+
+	c.Logger.Info("Recipe deleted", "id", id)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
