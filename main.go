@@ -1,28 +1,30 @@
 package main
 
 import (
+	"database/sql"
 	"log/slog"
 	"net/http"
 	"os"
 
 	"github.com/casantosmu/meal-sync/controllers"
-	"github.com/casantosmu/meal-sync/database"
+	"github.com/casantosmu/meal-sync/migrations"
 	"github.com/casantosmu/meal-sync/models"
 	"github.com/casantosmu/meal-sync/views"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	db, err := database.InitDB("file:./meal_sync.db?_fk=true&_journal=WAL")
+	db, err := initDB("file:./meal_sync.db?_fk=true&_journal=WAL")
 	if err != nil {
 		logger.Error("Unable to connect to database", "error", err.Error())
 		os.Exit(1)
 	}
 	defer db.Close()
 
-	err = database.RunMigrations(db, "./database/migrations")
+	err = migrations.RunMigrations(db, "./migrations/sql")
 	if err != nil {
 		logger.Error("Migration failed", "error", err.Error())
 		os.Exit(1)
@@ -49,6 +51,19 @@ func main() {
 		logger.Error("Unable to start server", "error", err.Error())
 		os.Exit(1)
 	}
+}
+
+func initDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("sqlite3", dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := db.Ping(); err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }
 
 func methodOverride(next http.Handler) http.Handler {

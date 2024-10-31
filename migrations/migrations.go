@@ -1,4 +1,4 @@
-package database
+package migrations
 
 import (
 	"crypto/md5"
@@ -7,22 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-
-	_ "github.com/mattn/go-sqlite3"
 )
-
-func InitDB(dsn string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", dsn)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := db.Ping(); err != nil {
-		return nil, err
-	}
-
-	return db, nil
-}
 
 type migration struct {
 	Name    string
