@@ -1,7 +1,7 @@
 CREATE TABLE recipes (
    recipe_id INTEGER PRIMARY KEY,
    title TEXT NOT NULL,
-   img_url TEXT NOT NULL,
+   img_url TEXT,
    description TEXT,
    ingredients TEXT,
    directions TEXT
@@ -9,10 +9,9 @@ CREATE TABLE recipes (
 
 CREATE INDEX idx_recipes_title ON recipes(title, ingredients);
 
-INSERT INTO recipes (title, img_url, description, ingredients, directions)
+INSERT INTO recipes (title, description, ingredients, directions)
 VALUES
-  ('Spicy Chorizo and Egg Burgers with White Pepper', 
-   'https://placehold.co/500x500', 
+  ('Spicy Chorizo and Egg Burgers with White Pepper',
    'A deliciously spicy twist on a classic burger, combining crispy chorizo with eggs fried to perfection. The addition of white pepper adds a subtle kick that makes this burger stand out. Perfect for brunch or a satisfying dinner.',
    'Chorizo - 200g
 Eggs - 4
@@ -32,8 +31,7 @@ Tomato',
 5. Serve immediately while warm and enjoy with your favorite side.'
   ),
   
-  ('Quinoa Salad with Mango and Avocado', 
-   'https://placehold.co/500x500', 
+  ('Quinoa Salad with Mango and Avocado',
    'This refreshing quinoa salad combines the tropical sweetness of mango with the creamy texture of avocado. Perfect as a light lunch or a healthy side dish, it is bursting with vibrant flavors and colors.',
    '1 cup Quinoa
 Mango (diced)
@@ -53,8 +51,7 @@ Salt and pepper',
 5. Serve chilled or at room temperature as a side or main dish.'
   ),
   
-  ('Roasted Tomato Soup with Basil', 
-   'https://placehold.co/500x500', 
+  ('Roasted Tomato Soup with Basil',
    'A comforting and flavorful roasted tomato soup, enhanced with the sweetness of roasted garlic and the freshness of basil. This rich soup is perfect for cold days and can be served with crusty bread for dipping.',
    '6 Tomatoes
 Garlic
@@ -74,8 +71,7 @@ Cream (optional)',
 5. Serve warm, garnished with additional basil leaves if desired.'
   ),
   
-  ('Baja Style Fish Tacos', 
-   'https://placehold.co/500x500', 
+  ('Baja Style Fish Tacos',
    'Crispy, flavorful fish wrapped in warm tortillas with a fresh, tangy cabbage slaw. These Baja style tacos are light, refreshing, and perfect for a summer meal or a casual get-together.',
    '500g White fish
 Tortillas
@@ -96,8 +92,7 @@ Avocado',
 5. Serve immediately with extra lime wedges on the side.'
   ),
   
-  ('Classic Margherita Pizza with Fresh Mozzarella', 
-   'https://placehold.co/500x500', 
+  ('Classic Margherita Pizza with Fresh Mozzarella',
    'A timeless pizza classic that highlights simple ingredients like fresh mozzarella, vibrant basil, and rich tomato sauce. This pizza is a perfect balance of flavors and textures, ideal for any pizza night.',
    'Pizza dough
 Tomato sauce
@@ -120,8 +115,7 @@ Salt',
 7. Remove from the oven and let it cool for a minute before slicing. Serve hot.'
   ),
   
-  ('Traditional Seafood Paella', 
-   'https://placehold.co/500x500', 
+  ('Traditional Seafood Paella',
    'A vibrant and aromatic Spanish dish filled with a medley of fresh seafood and saffron-infused rice. This classic paella is packed with flavors from the chorizo, bell peppers, and a mix of shellfish, making it a showstopper at any dinner table.',
    '2 cups Rice
 Shrimp - 300g
@@ -148,8 +142,7 @@ Peas',
 6. Let the paella rest for a few minutes before serving. Garnish with fresh lemon wedges.'
   ),
   
-  ('Shrimp Ceviche with Lime and Cilantro', 
-   'https://placehold.co/500x500', 
+  ('Shrimp Ceviche with Lime and Cilantro',
    'A zesty and refreshing ceviche that lets the natural sweetness of shrimp shine, balanced with tangy lime and fresh cilantro. This dish is perfect as an appetizer or a light summer meal, served chilled.',
    'Shrimp (peeled and deveined) - 200g
 1/2 cup Lime juice
@@ -170,8 +163,7 @@ Salt and pepper',
 5. Serve chilled, accompanied by tortilla chips or lettuce leaves for wrapping.'
   ),
   
-  ('Coconut Curry Chicken', 
-   'https://placehold.co/500x500', 
+  ('Coconut Curry Chicken',
    'A creamy and aromatic coconut curry chicken dish, rich in spices and balanced with the sweetness of coconut milk. This easy-to-make curry pairs perfectly with rice for a satisfying and comforting meal.',
    'Chicken - 500g
 1 can Coconut milk
@@ -193,8 +185,7 @@ Serve with Rice',
 5. Serve the coconut curry chicken over steamed rice for a complete meal.'
   ),
   
-  ('Spinach and Ricotta Ravioli with Tomato Sauce', 
-   'https://placehold.co/500x500', 
+  ('Spinach and Ricotta Ravioli with Tomato Sauce',
    'Delicate spinach and ricotta-filled ravioli served with a simple yet flavorful tomato sauce. This comforting Italian dish is perfect for a cozy dinner, topped with fresh basil and parmesan cheese.',
    'Spinach and Ricotta Ravioli
 Tomatoes, crushed - 400g
@@ -214,8 +205,7 @@ Salt and pepper',
 5. Serve with freshly grated parmesan cheese and additional basil leaves.'
   ),
   
-  ('Chocolate Walnut Brownies', 
-   'https://placehold.co/500x500', 
+  ('Chocolate Walnut Brownies',
    'Rich and fudgy chocolate brownies studded with crunchy walnuts. These decadent brownies are a perfect dessert for chocolate lovers, with a crispy top and gooey center.',
    '200g Chocolate
 Butter - 100g

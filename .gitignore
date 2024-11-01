@@ -1,3 +1,4 @@
-*.db*
+meal_sync.db*
 .idea
 .vscode
+uploads

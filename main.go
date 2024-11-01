@@ -42,6 +42,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
 	recipeController.Mount(mux)
 
 	logger.Info("Starting server on :3000")

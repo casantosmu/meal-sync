@@ -39,6 +39,50 @@ func (v View) SetErrors(w http.ResponseWriter, errs map[string]string) {
 	setFlashValue(w, errorsName, serialized)
 }
 
+func (v View) SetFlashBool(w http.ResponseWriter, name string, value bool) {
+	str := "true"
+	if !value {
+		str = "false"
+	}
+	setFlashValue(w, name, []byte(str))
+}
+
+func (v View) GetFlashBool(w http.ResponseWriter, r *http.Request, name string) (bool, error) {
+	value, err := getFlashValue(w, r, name)
+	if err != nil {
+		return false, err
+	}
+	return string(value) == "true", nil
+}
+
+func setFlashValue(w http.ResponseWriter, name string, value []byte) {
+	encoded := base64.URLEncoding.EncodeToString(value)
+	c := &http.Cookie{Name: name, Value: encoded, Path: "/", MaxAge: 15}
+	http.SetCookie(w, c)
+}
+
+func getFlashValue(w http.ResponseWriter, r *http.Request, name string) ([]byte, error) {
+	c, err := r.Cookie(name)
+	if err != nil {
+		switch err {
+		case http.ErrNoCookie:
+			return nil, nil
+		default:
+			return nil, err
+		}
+	}
+
+	decoded, err := base64.URLEncoding.DecodeString(c.Value)
+	if err != nil {
+		return nil, err
+	}
+
+	dc := &http.Cookie{Name: name, Path: "/", MaxAge: -1}
+	http.SetCookie(w, dc)
+
+	return decoded, nil
+}
+
 func getFlash(w http.ResponseWriter, r *http.Request) (flash, error) {
 	successDecoded, err := getFlashValue(w, r, successName)
 	if err != nil {
@@ -72,32 +116,4 @@ func getFlash(w http.ResponseWriter, r *http.Request) (flash, error) {
 	}
 
 	return flash{Toast: toast, Errors: errorsMap}, nil
-}
-
-func setFlashValue(w http.ResponseWriter, name string, value []byte) {
-	encoded := base64.URLEncoding.EncodeToString(value)
-	c := &http.Cookie{Name: name, Value: encoded, Path: "/", MaxAge: 15}
-	http.SetCookie(w, c)
-}
-
-func getFlashValue(w http.ResponseWriter, r *http.Request, name string) ([]byte, error) {
-	c, err := r.Cookie(name)
-	if err != nil {
-		switch err {
-		case http.ErrNoCookie:
-			return nil, nil
-		default:
-			return nil, err
-		}
-	}
-
-	decoded, err := base64.URLEncoding.DecodeString(c.Value)
-	if err != nil {
-		return nil, err
-	}
-
-	dc := &http.Cookie{Name: name, Path: "/", MaxAge: -1}
-	http.SetCookie(w, dc)
-
-	return decoded, nil
 }

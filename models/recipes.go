@@ -15,6 +15,13 @@ type Recipe struct {
 	Directions  string
 }
 
+func (r Recipe) ImageURLOrDefault() string {
+	if r.ImageURL == "" {
+		return "/static/images/recipe_placeholder.svg"
+	}
+	return r.ImageURL
+}
+
 func (r Recipe) IngredientsToList() []string {
 	lines := strings.Split(r.Ingredients, "\n")
 	ingredients := make([]string, 0, len(lines))
@@ -49,14 +56,14 @@ type RecipeModel struct {
 	DB *sql.DB
 }
 
-func (m RecipeModel) Create(title, img string) (int, error) {
-	query := `INSERT INTO recipes (title, img_url)
-	VALUES (?, ?)
+func (m RecipeModel) Create(title string) (int, error) {
+	query := `INSERT INTO recipes (title)
+	VALUES (?)
 	RETURNING recipe_id;
 	`
 
 	var id int
-	err := m.DB.QueryRow(query, title, img).Scan(&id)
+	err := m.DB.QueryRow(query, title).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
@@ -65,7 +72,7 @@ func (m RecipeModel) Create(title, img string) (int, error) {
 }
 
 func (m RecipeModel) GetByPk(id int) (Recipe, error) {
-	query := `SELECT recipe_id, title, img_url, COALESCE(description, ''), COALESCE(ingredients, ''), COALESCE(directions, '')
+	query := `SELECT recipe_id, title, COALESCE(img_url, ''), COALESCE(description, ''), COALESCE(ingredients, ''), COALESCE(directions, '')
 	FROM recipes
 	WHERE recipe_id = ?;`
 
@@ -82,7 +89,7 @@ func (m RecipeModel) GetByPk(id int) (Recipe, error) {
 }
 
 func (m RecipeModel) Search(search string) ([]Recipe, error) {
-	query := "SELECT recipe_id, title, img_url FROM recipes"
+	query := "SELECT recipe_id, title, COALESCE(img_url, '') FROM recipes"
 	var args []any
 
 	if search != "" {
@@ -119,7 +126,13 @@ func (m RecipeModel) UpdateByPk(id int, title, description, ingredients, directi
 		directions = ?
 	WHERE recipe_id = ?;`
 
-	result, err := m.DB.Exec(query, title, description, ingredients, directions, id)
+	result, err := m.DB.Exec(query,
+		title,
+		newNullString(description),
+		newNullString(ingredients),
+		newNullString(directions),
+		id,
+	)
 	if err != nil {
 		return err
 	}
@@ -140,6 +153,28 @@ func (m RecipeModel) RemoveByPk(id int) error {
 	query := "DELETE FROM recipes WHERE recipe_id = ?;"
 
 	result, err := m.DB.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
+func (m RecipeModel) UpdateImageByPk(id int, path string) error {
+	query := `UPDATE recipes
+	SET img_url = ?
+	WHERE recipe_id = ?;`
+
+	result, err := m.DB.Exec(query, newNullString(path), id)
 	if err != nil {
 		return err
 	}

@@ -157,7 +157,7 @@
     </div>
 
     <div
-            class="modal fade"
+            class="modal{{if not .ShowImageModal}} fade{{end}}"
             id="editImageModal"
             tabindex="-1"
             aria-labelledby="editImageModalLabel"
@@ -172,15 +172,16 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <img src="{{.Recipe.ImageURL}}" alt="{{.Recipe.Title}}" class="img-fluid mb-3">
+                    <img src="{{.Recipe.ImageURLOrDefault}}" alt="{{.Recipe.Title}}" class="img-fluid w-100 mb-3">
                     <form
                             id="editImageForm"
                             action="/recipes/{{.Recipe.Id}}/image"
                             method="post"
+                            enctype="multipart/form-data"
                     >
                         <input type="hidden" name="_method" value="PUT">
                         <label for="newImage" class="visually-hidden">Select Image to Upload</label>
-                        <input type="file" class="form-control" id="newImage" name="image">
+                        <input type="file" class="form-control" id="newImage" name="image" required>
                     </form>
                 </div>
                 <div class="modal-footer d-flex">
@@ -188,25 +189,47 @@
                         Save Changes
                     </button>
 
-                    <form
-                            id="deleteImageForm"
-                            action="/recipes/{{.Recipe.Id}}/image"
-                            method="post"
-                    >
-                        <input type="hidden" name="_method" value="DELETE">
-                        <button type="submit" class="btn btn-outline-danger" aria-label="Delete Image">
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                 viewBox="0 0 448 512"
-                                 fill="currentColor"
-                                 width="1em"
-                                 height="1em"
-                            >
-                                <path d="M135.2 17.7L128 32 32 32C14.3 32 0 46.3 0 64S14.3 96 32 96l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0-7.2-14.3C307.4 6.8 296.3 0 284.2 0L163.8 0c-12.1 0-23.2 6.8-28.6 17.7zM416 128L32 128 53.2 467c1.6 25.3 22.6 45 47.9 45l245.8 0c25.3 0 46.3-19.7 47.9-45L416 128z"/>
-                            </svg>
-                        </button>
-                    </form>
+                    {{if .Recipe.ImageURL}}
+                        <form
+                                id="deleteImageForm"
+                                action="/recipes/{{.Recipe.Id}}/image"
+                                method="post"
+                        >
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="submit" class="btn btn-outline-danger" aria-label="Delete Image">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                     viewBox="0 0 448 512"
+                                     fill="currentColor"
+                                     width="1em"
+                                     height="1em"
+                                >
+                                    <path d="M135.2 17.7L128 32 32 32C14.3 32 0 46.3 0 64S14.3 96 32 96l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0-7.2-14.3C307.4 6.8 296.3 0 284.2 0L163.8 0c-12.1 0-23.2 6.8-28.6 17.7zM416 128L32 128 53.2 467c1.6 25.3 22.6 45 47.9 45l245.8 0c25.3 0 46.3-19.7 47.9-45L416 128z"/>
+                                </svg>
+                            </button>
+                        </form>
+                    {{end}}
                 </div>
             </div>
         </div>
     </div>
+{{end}}
+{{define "scripts"}}
+    {{if .ShowImageModal}}
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const modalElement = document.querySelector("#editImageModal");
+                const modal = new bootstrap.Modal(modalElement);
+
+                let isFirstTime = true;
+                modalElement.addEventListener("shown.bs.modal", () => {
+                    if (isFirstTime) {
+                        modalElement.classList.add("fade");
+                        isFirstTime = false;
+                    }
+                });
+
+                modal.show();
+            });
+        </script>
+    {{end}}
 {{end}}
