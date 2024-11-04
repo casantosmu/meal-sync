@@ -7,8 +7,6 @@ CREATE TABLE recipes (
    directions TEXT
 );
 
-CREATE INDEX idx_recipes_title ON recipes(title, ingredients);
-
 INSERT INTO recipes (title, description, ingredients, directions)
 VALUES
   ('Spicy Chorizo and Egg Burgers with White Pepper',

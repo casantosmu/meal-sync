@@ -26,9 +26,9 @@ var (
 )
 
 type RecipeController struct {
-	Logger      *slog.Logger
-	Views       views.View
-	RecipeModel models.RecipeModel
+	Logger *slog.Logger
+	View   views.View
+	Models models.Models
 }
 
 func (c RecipeController) Mount(srv *http.ServeMux) {
@@ -44,21 +44,21 @@ func (c RecipeController) Mount(srv *http.ServeMux) {
 
 func (c RecipeController) createPOST(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
 	title := r.FormValue("title")
 
 	if strings.TrimSpace(title) == "" {
-		c.Views.SetErrorToast(w, "Title must not be blank.")
+		c.View.SetErrorToast(w, "Title must not be blank.")
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 
-	id, err := c.RecipeModel.Create(title)
+	id, err := c.Models.Recipe.Create(title)
 	if err != nil {
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
@@ -68,100 +68,100 @@ func (c RecipeController) createPOST(w http.ResponseWriter, r *http.Request) {
 
 func (c RecipeController) listGET(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
 	search := r.FormValue("search")
 
-	list, err := c.RecipeModel.Search(search)
+	list, err := c.Models.Recipe.Search(search)
 	if err != nil {
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
 	data := map[string]any{"Recipes": list, "Search": search}
-	c.Views.Render(w, r, http.StatusOK, "recipe-list.tmpl", data)
+	c.View.Render(w, r, "recipe-list.tmpl", data)
 }
 
 func (c RecipeController) getGET(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 	if idParam == "" {
 		err := errors.New("expected id path value")
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		c.Views.ClientError(w, r, http.StatusBadRequest)
+		c.View.ClientError(w, r, http.StatusBadRequest)
 		return
 	}
 
-	recipe, err := c.RecipeModel.GetByPk(id)
+	recipe, err := c.Models.Recipe.GetByPk(id)
 	if err != nil {
 		if errors.Is(err, models.ErrNotFound) {
-			c.Views.ClientError(w, r, http.StatusNotFound)
+			c.View.ClientError(w, r, http.StatusNotFound)
 			return
 		}
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
 	data := map[string]any{"Recipe": recipe}
-	c.Views.Render(w, r, http.StatusOK, "recipe-details.tmpl", data)
+	c.View.Render(w, r, "recipe-details.tmpl", data)
 }
 
 func (c RecipeController) updateGET(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 	if idParam == "" {
 		err := errors.New("expected id path value")
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		c.Views.ClientError(w, r, http.StatusBadRequest)
+		c.View.ClientError(w, r, http.StatusBadRequest)
 		return
 	}
 
-	recipe, err := c.RecipeModel.GetByPk(id)
+	recipe, err := c.Models.Recipe.GetByPk(id)
 	if err != nil {
 		if errors.Is(err, models.ErrNotFound) {
-			c.Views.ClientError(w, r, http.StatusNotFound)
+			c.View.ClientError(w, r, http.StatusNotFound)
 			return
 		}
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
-	showImageModal, err := c.Views.GetFlashBool(w, r, ShowImageModalName)
+	showImageModal, err := c.View.GetFlashBool(w, r, ShowImageModalName)
 	if err != nil {
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
 	data := map[string]any{"Recipe": recipe, "ShowImageModal": showImageModal}
-	c.Views.Render(w, r, http.StatusOK, "recipe-edit.tmpl", data)
+	c.View.Render(w, r, "recipe-edit.tmpl", data)
 }
 
 func (c RecipeController) updatePUT(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 	if idParam == "" {
 		err := errors.New("expected id path value")
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		c.Views.ClientError(w, r, http.StatusBadRequest)
+		c.View.ClientError(w, r, http.StatusBadRequest)
 		return
 	}
 
 	if err := r.ParseForm(); err != nil {
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
@@ -177,22 +177,22 @@ func (c RecipeController) updatePUT(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(validationErrs) > 0 {
-		c.Views.SetErrors(w, validationErrs)
+		c.View.SetErrors(w, validationErrs)
 		http.Redirect(w, r, fmt.Sprintf("/recipes/%d/edit", id), http.StatusSeeOther)
 		return
 	}
 
-	err = c.RecipeModel.UpdateByPk(id, title, description, ingredients, directions)
+	err = c.Models.Recipe.UpdateByPk(id, title, description, ingredients, directions)
 	if err != nil {
 		if errors.Is(err, models.ErrNotFound) {
-			c.Views.ClientError(w, r, http.StatusNotFound)
+			c.View.ClientError(w, r, http.StatusNotFound)
 			return
 		}
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
-	c.Views.SetSuccessToast(w, "Your recipe has been saved.")
+	c.View.SetSuccessToast(w, "Your recipe has been saved.")
 
 	c.Logger.Info("Recipe updated", "id", id)
 	http.Redirect(w, r, fmt.Sprintf("/recipes/%d", id), http.StatusSeeOther)
@@ -202,27 +202,27 @@ func (c RecipeController) removeDELETE(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 	if idParam == "" {
 		err := errors.New("expected id path value")
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		c.Views.ClientError(w, r, http.StatusBadRequest)
+		c.View.ClientError(w, r, http.StatusBadRequest)
 		return
 	}
 
-	err = c.RecipeModel.RemoveByPk(id)
+	err = c.Models.Recipe.RemoveByPk(id)
 	if err != nil {
 		if errors.Is(err, models.ErrNotFound) {
-			c.Views.ClientError(w, r, http.StatusNotFound)
+			c.View.ClientError(w, r, http.StatusNotFound)
 			return
 		}
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
-	c.Views.SetSuccessToast(w, "Your recipe has been deleted.")
+	c.View.SetSuccessToast(w, "Your recipe has been deleted.")
 
 	c.Logger.Info("Recipe deleted", "id", id)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -232,37 +232,37 @@ func (c RecipeController) imagePUT(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 	if idParam == "" {
 		err := errors.New("expected id path value")
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		c.Views.ClientError(w, r, http.StatusBadRequest)
+		c.View.ClientError(w, r, http.StatusBadRequest)
 		return
 	}
 
 	if err := r.ParseForm(); err != nil {
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
 	file, handler, err := r.FormFile("image")
 	if err != nil {
 		if errors.Is(err, http.ErrMissingFile) {
-			c.Views.SetErrorToast(w, "Please upload an image file.")
-			c.Views.SetFlashBool(w, ShowImageModalName, true)
+			c.View.SetErrorToast(w, "Please upload an image file.")
+			c.View.SetFlashBool(w, ShowImageModalName, true)
 			http.Redirect(w, r, fmt.Sprintf("/recipes/%d/edit", id), http.StatusSeeOther)
 			return
 		}
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 	defer file.Close()
 
 	if handler.Size > maxFileSize {
-		c.Views.SetErrorToast(w, "File size exceeds 1 MB. Please upload a smaller file.")
-		c.Views.SetFlashBool(w, ShowImageModalName, true)
+		c.View.SetErrorToast(w, "File size exceeds 1 MB. Please upload a smaller file.")
+		c.View.SetFlashBool(w, ShowImageModalName, true)
 		http.Redirect(w, r, fmt.Sprintf("/recipes/%d/edit", id), http.StatusSeeOther)
 		return
 	}
@@ -271,34 +271,34 @@ func (c RecipeController) imagePUT(w http.ResponseWriter, r *http.Request) {
 
 	if err = validateFileFormat(file, ext); err != nil {
 		if errors.Is(err, ErrFileFormat) {
-			c.Views.SetErrorToast(w, "Unsupported file format. Please upload a .jpg, .jpeg, or .png file.")
-			c.Views.SetFlashBool(w, ShowImageModalName, true)
+			c.View.SetErrorToast(w, "Unsupported file format. Please upload a .jpg, .jpeg, or .png file.")
+			c.View.SetFlashBool(w, ShowImageModalName, true)
 			http.Redirect(w, r, fmt.Sprintf("/recipes/%d/edit", id), http.StatusSeeOther)
 			return
 		}
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
 	path, err := uploadImage(file, ext)
 	if err != nil {
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
-	err = c.RecipeModel.UpdateImageByPk(id, path)
+	err = c.Models.Recipe.UpdateImageByPk(id, path)
 	if err != nil {
 		// TODO: Remove image from disk
 		if errors.Is(err, models.ErrNotFound) {
-			c.Views.ClientError(w, r, http.StatusNotFound)
+			c.View.ClientError(w, r, http.StatusNotFound)
 			return
 		}
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
-	c.Views.SetSuccessToast(w, "Your image has been uploaded.")
-	c.Views.SetFlashBool(w, ShowImageModalName, true)
+	c.View.SetSuccessToast(w, "Your image has been uploaded.")
+	c.View.SetFlashBool(w, ShowImageModalName, true)
 
 	c.Logger.Info("Image updated", "id", id, "path", path)
 	http.Redirect(w, r, fmt.Sprintf("/recipes/%d/edit", id), http.StatusSeeOther)
@@ -308,30 +308,30 @@ func (c RecipeController) imageDELETE(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 	if idParam == "" {
 		err := errors.New("expected id path value")
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		c.Views.ClientError(w, r, http.StatusBadRequest)
+		c.View.ClientError(w, r, http.StatusBadRequest)
 		return
 	}
 
-	// TODO: Prevent race conditions
-	recipe, err := c.RecipeModel.GetByPk(id)
+	// TODO: Prevent race conditions between get and update
+	recipe, err := c.Models.Recipe.GetByPk(id)
 	if err != nil {
 		if errors.Is(err, models.ErrNotFound) {
-			c.Views.ClientError(w, r, http.StatusNotFound)
+			c.View.ClientError(w, r, http.StatusNotFound)
 			return
 		}
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
-	err = c.RecipeModel.UpdateImageByPk(id, "")
+	err = c.Models.Recipe.UpdateImageByPk(id, "")
 	if err != nil {
-		c.Views.ServerError(w, r, err)
+		c.View.ServerError(w, r, err)
 		return
 	}
 
@@ -339,13 +339,13 @@ func (c RecipeController) imageDELETE(w http.ResponseWriter, r *http.Request) {
 	if path != "" {
 		err := os.Remove(path)
 		if err != nil {
-			c.Views.ServerError(w, r, err)
+			c.View.ServerError(w, r, err)
 			return
 		}
 	}
 
-	c.Views.SetSuccessToast(w, "The image has been deleted.")
-	c.Views.SetFlashBool(w, ShowImageModalName, true)
+	c.View.SetSuccessToast(w, "The image has been deleted.")
+	c.View.SetFlashBool(w, ShowImageModalName, true)
 
 	c.Logger.Info("Image deleted", "id", id, "path", path)
 	http.Redirect(w, r, fmt.Sprintf("/recipes/%d/edit", id), http.StatusSeeOther)

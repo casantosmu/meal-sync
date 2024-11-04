@@ -59,8 +59,7 @@ type RecipeModel struct {
 func (m RecipeModel) Create(title string) (int, error) {
 	query := `INSERT INTO recipes (title)
 	VALUES (?)
-	RETURNING recipe_id;
-	`
+	RETURNING recipe_id;`
 
 	var id int
 	err := m.DB.QueryRow(query, title).Scan(&id)

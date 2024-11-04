@@ -1,0 +1,120 @@
+{{define "title"}}Meal Plan{{end}}
+
+{{define "main"}}
+    <h1 class="h2 pb-4">Meal Plan</h1>
+    <ul class="list-group">
+        {{range .Meals}}
+            <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="h5 m-0">{{.DayOfWeek}} <span class="text-muted">{{.MonthDay}}</span></h2>
+                    <button
+                            type="button"
+                            class="btn btn-outline-secondary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#recipes-selection"
+                            data-bs-date="{{.DateFormat}}"
+                    >
+                        <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 448 512"
+                                fill="currentColor"
+                                width="1em"
+                                height="1em"
+                                class="me-1"
+                        >
+                            <path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 144L48 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l144 0 0 144c0 17.7 14.3 32 32 32s32-14.3 32-32l0-144 144 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-144 0 0-144z"/>
+                        </svg>
+                        Plan
+                    </button>
+                </div>
+                <ul class="list-unstyled">
+                    {{range .Recipes}}
+                        <li class="d-flex align-items-center position-relative pt-2">
+                            <img
+                                    src="{{.ImageURLOrDefault}}"
+                                    class="me-3 rounded"
+                                    alt="{{.Title}}"
+                                    width="50"
+                                    height="50"
+                            >
+                            <a
+                                    href="/recipes/{{.Id}}"
+                                    class="fw-semibold stretched-link text-reset link-underline-secondary link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover"
+                            >
+                                {{.Title}}
+                            </a>
+                        </li>
+                    {{end}}
+                </ul>
+            </li>
+        {{end}}
+    </ul>
+
+    <div class="d-flex justify-content-between align-items-center pt-3">
+        <a href="/meals?date={{.PrevWeekStart}}" class="btn fs-5 fw-semibold" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+        </a>
+        <span class="fw-semibold">Week of {{.MonthDayYear}}</span>
+        <a href="/meals?date={{.NextWeekStart}}" class="btn fs-5 fw-semibold" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+        </a>
+    </div>
+
+    <div class="modal fade" id="recipes-selection" tabindex="-1" aria-labelledby="..." aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <form id="search-form" class="me-3">
+                        <input type="hidden" name="date" id="search-date" value="">
+                        <div class="input-group">
+                            <input
+                                    type="search"
+                                    name="search"
+                                    id="search-input"
+                                    class="form-control"
+                                    placeholder="Search recipes..."
+                                    aria-label="Search recipes"
+                            />
+                            <button type="submit" class="btn btn-secondary">Search</button>
+                        </div>
+                    </form>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div id="search-results" class="modal-body"></div>
+            </div>
+        </div>
+    </div>
+{{end}}
+{{block "scripts" .}}
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const modal = document.querySelector("#recipes-selection");
+            const searchForm = modal.querySelector("#search-form");
+            const searchInput = modal.querySelector("#search-input");
+            const searchDate = modal.querySelector("#search-date");
+            const searchResults = modal.querySelector("#search-results");
+
+            modal.addEventListener("show.bs.modal", async (event) => {
+                const date = event.relatedTarget.getAttribute("data-bs-date");
+                searchDate.value = date;
+                searchResults.innerHTML = await fetchRecipesHTML(date, "");
+            });
+
+            searchForm.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const search = searchInput.value;
+                const date = searchDate.value;
+                searchResults.innerHTML = await fetchRecipesHTML(date, search);
+            });
+
+            const fetchRecipesHTML = async (date, search) => {
+                const res = await fetch(`/meals/recipes/selection?date=${date}&search=${search}`);
+                if (!res.ok) {
+                    console.error(`Request error: ${res.status}`);
+                    return;
+                }
+                return res.text();
+            }
+        });
+    </script>
+{{end}}

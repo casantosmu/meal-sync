@@ -36,18 +36,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	recipeModel := models.RecipeModel{DB: db}
-	recipeController := controllers.RecipeController{Logger: logger, Views: view, RecipeModel: recipeModel}
+	models := models.Models{
+		Recipe: models.RecipeModel{DB: db},
+		Meal:   models.MealModel{DB: db},
+	}
 
-	mux := http.NewServeMux()
-
-	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
-	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
-	recipeController.Mount(mux)
+	srv := buildServer([]controller{
+		controllers.RecipeController{Logger: logger, View: view, Models: models},
+		controllers.MealController{Logger: logger, View: view, Models: models},
+	})
 
 	logger.Info("Starting server on :3000")
 
-	err = http.ListenAndServe(":3000", methodOverride(mux))
+	err = http.ListenAndServe(":3000", srv)
 	if err != nil {
 		logger.Error("Unable to start server", "error", err.Error())
 		os.Exit(1)
@@ -65,6 +66,23 @@ func initDB(dsn string) (*sql.DB, error) {
 	}
 
 	return db, nil
+}
+
+type controller interface {
+	Mount(mux *http.ServeMux)
+}
+
+func buildServer(controllers []controller) http.Handler {
+	mux := http.NewServeMux()
+
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
+
+	for _, controller := range controllers {
+		controller.Mount(mux)
+	}
+
+	return methodOverride(mux)
 }
 
 func methodOverride(next http.Handler) http.Handler {
