@@ -2,7 +2,7 @@
 
 {{define "main"}}
     <div class="d-flex align-items-center justify-content-between pb-4">
-        <a class="btn btn-outline-light" href="/recipes/{{.Recipe.Id}}/edit">
+        <a class="btn btn-outline-light" href="/recipes/{{.Recipe.ID}}/edit">
             <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 512 512"
@@ -32,7 +32,6 @@
                         fill="currentColor"
                         width="1em"
                         height="1em"
-                        class="me-1"
                 >
                     <path
                             d="M64 144a48 48 0 1 0 0-96 48 48 0 1 0 0 96zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32l288 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L192 64zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32l288 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-288 0zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32l288 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-288 0zM64 464a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm48-208a48 48 0 1 0 -96 0 48 48 0 1 0 96 0z"
@@ -65,7 +64,7 @@
         </div>
     </div>
 
-    {{ with.Recipe }}
+    {{with.Recipe}}
         <div class="row">
             <div class="col-sm-5 col-md-4">
                 <img
@@ -74,7 +73,7 @@
                         height="300"
                         class="img-fluid w-100 pb-2"
                         alt="{{.Title}}"
-                />
+                >
             </div>
             <div class="col-sm-7 col-md-8">
                 <h1 class="h3 pb-2">{{.Title}}</h1>
@@ -92,31 +91,29 @@
                                         class="form-check-input me-1"
                                         type="checkbox"
                                         value=""
-                                        id="checkbox{{ $index }}"
-                                />
+                                        id="checkbox{{$index}}"
+                                >
                                 <label
                                         class="form-check-label stretched-link"
-                                        for="checkbox{{ $index }}"
+                                        for="checkbox{{$index}}"
                                 >
-                                    {{ $element }}
+                                    {{$element}}
                                 </label>
                             </li>
-                        {{
-                        end
-                        }}
+                        {{end}}
                     </ul>
-                {{ end }}
+                {{end}}
             </div>
             <div class="col-sm-7 col-md-8">
                 {{if .Directions}}
                     <h2 class="h5 pt-4">Directions</h2>
-                    {{ range.DirectionsToList }}
+                    {{range.DirectionsToList}}
                         <p>{{.}}</p>
-                    {{ end }}
-                {{ end }}
+                    {{end}}
+                {{end}}
             </div>
         </div>
-    {{ end }}
+    {{end}}
 
     <div
             class="modal fade"
@@ -146,8 +143,8 @@
                     >
                         Cancel
                     </button>
-                    <form id="deleteForm" action="/recipes/{{.Recipe.Id}}" method="post">
-                        <input type="hidden" name="_method" value="DELETE"/>
+                    <form id="deleteForm" action="/recipes/{{.Recipe.ID}}" method="post">
+                        <input type="hidden" name="_method" value="DELETE">
                         <button type="submit" class="btn btn-danger">Delete Recipe</button>
                     </form>
                 </div>

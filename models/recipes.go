@@ -7,7 +7,7 @@ import (
 )
 
 type Recipe struct {
-	Id          int
+	ID          int
 	Title       string
 	ImageURL    string
 	Description string
@@ -24,7 +24,7 @@ func (r Recipe) ImageURLOrDefault() string {
 
 func (r Recipe) IngredientsToList() []string {
 	lines := strings.Split(r.Ingredients, "\n")
-	ingredients := make([]string, 0, len(lines))
+	var ingredients = []string{}
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
 		if trimmed != "" {
@@ -38,8 +38,10 @@ func (r Recipe) IngredientsToList() []string {
 }
 
 func (r Recipe) DirectionsToList() []string {
-	lines := strings.Split(r.Directions, "\n\n")
-	directions := make([]string, 0, len(lines))
+	lines := strings.FieldsFunc(r.Directions, func(r rune) bool {
+		return r == '\n' || r == '\r'
+	})
+	var directions = []string{}
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
 		if trimmed != "" {
@@ -76,7 +78,7 @@ func (m RecipeModel) GetByPk(id int) (Recipe, error) {
 	WHERE recipe_id = ?;`
 
 	r := Recipe{}
-	err := m.DB.QueryRow(query, id).Scan(&r.Id, &r.Title, &r.ImageURL, &r.Description, &r.Ingredients, &r.Directions)
+	err := m.DB.QueryRow(query, id).Scan(&r.ID, &r.Title, &r.ImageURL, &r.Description, &r.Ingredients, &r.Directions)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return r, ErrNotFound
@@ -107,7 +109,7 @@ func (m RecipeModel) Search(search string) ([]Recipe, error) {
 	var list []Recipe
 	for rows.Next() {
 		var r Recipe
-		err := rows.Scan(&r.Id, &r.Title, &r.ImageURL)
+		err := rows.Scan(&r.ID, &r.Title, &r.ImageURL)
 		if err != nil {
 			return nil, err
 		}

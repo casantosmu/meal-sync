@@ -288,7 +288,6 @@ func (c RecipeController) imagePUT(w http.ResponseWriter, r *http.Request) {
 
 	err = c.Models.Recipe.UpdateImageByPk(id, path)
 	if err != nil {
-		// TODO: Remove image from disk
 		if errors.Is(err, models.ErrNotFound) {
 			c.View.ClientError(w, r, http.StatusNotFound)
 			return
@@ -318,7 +317,6 @@ func (c RecipeController) imageDELETE(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Prevent race conditions between get and update
 	recipe, err := c.Models.Recipe.GetByPk(id)
 	if err != nil {
 		if errors.Is(err, models.ErrNotFound) {

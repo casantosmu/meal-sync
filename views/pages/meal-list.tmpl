@@ -3,7 +3,7 @@
 {{define "main"}}
     <h1 class="h2 pb-4">Meal Plan</h1>
     <ul class="list-group">
-        {{range .Meals}}
+        {{range .MealsByDate}}
             <li class="list-group-item">
                 <div class="d-flex justify-content-between align-items-center">
                     <h2 class="h5 m-0">{{.DayOfWeek}} <span class="text-muted">{{.MonthDay}}</span></h2>
@@ -28,21 +28,61 @@
                     </button>
                 </div>
                 <ul class="list-unstyled">
-                    {{range .Recipes}}
-                        <li class="d-flex align-items-center position-relative pt-2">
-                            <img
-                                    src="{{.ImageURLOrDefault}}"
-                                    class="me-3 rounded"
-                                    alt="{{.Title}}"
+                    {{range .Meals}}
+                        <li class="d-flex align-items-center justify-content-between pt-2">
+                            <a href="/recipes/{{.Recipe.ID}}" class="d-flex align-items-center fw-semibold text-reset link-underline-secondary link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover">
+                                <img
+                                    src="{{.Recipe.ImageURLOrDefault}}"
+                                    class="me-3 rounded object-fit-cover"
+                                    alt="{{.Recipe.Title}}"
                                     width="50"
                                     height="50"
-                            >
-                            <a
-                                    href="/recipes/{{.Id}}"
-                                    class="fw-semibold stretched-link text-reset link-underline-secondary link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover"
-                            >
-                                {{.Title}}
+                                >
+                                {{.Recipe.Title}}
                             </a>
+                            <div class="dropdown">
+                                <button
+                                        class="btn"
+                                        type="button"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false"
+                                        aria-label="Open dropdown button"
+                                >
+                                    <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 512 512"
+                                            fill="currentColor"
+                                            width="1em"
+                                            height="1em"
+                                    >
+                                        <path
+                                                d="M64 144a48 48 0 1 0 0-96 48 48 0 1 0 0 96zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32l288 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L192 64zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32l288 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-288 0zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32l288 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-288 0zM64 464a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm48-208a48 48 0 1 0 -96 0 48 48 0 1 0 96 0z"
+                                        />
+                                    </svg>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <form method="POST" action="/meals/{{.ID}}?date={{.Date}}">
+                                            <input type="hidden" name="_method" value="DELETE">
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        viewBox="0 0 448 512"
+                                                        fill="currentColor"
+                                                        width="1em"
+                                                        height="1em"
+                                                        class="me-1"
+                                                >
+                                                    <path
+                                                            d="M135.2 17.7L128 32 32 32C14.3 32 0 46.3 0 64S14.3 96 32 96l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0-7.2-14.3C307.4 6.8 296.3 0 284.2 0L163.8 0c-12.1 0-23.2 6.8-28.6 17.7zM416 128L32 128 53.2 467c1.6 25.3 22.6 45 47.9 45l245.8 0c25.3 0 46.3-19.7 47.9-45L416 128z"
+                                                    />
+                                                </svg>
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
                         </li>
                     {{end}}
                 </ul>
@@ -60,7 +100,7 @@
         </a>
     </div>
 
-    <div class="modal fade" id="recipes-selection" tabindex="-1" aria-labelledby="..." aria-hidden="true">
+    <div class="modal fade" id="recipes-selection" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
@@ -74,7 +114,7 @@
                                     class="form-control"
                                     placeholder="Search recipes..."
                                     aria-label="Search recipes"
-                            />
+                            >
                             <button type="submit" class="btn btn-secondary">Search</button>
                         </div>
                     </form>

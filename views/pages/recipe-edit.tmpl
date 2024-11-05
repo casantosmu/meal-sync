@@ -3,7 +3,7 @@
 {{define "main"}}
     <h1 class="h4 pb-4">Edit Recipe</h1>
 
-    <form id="recipeForm" action="/recipes/{{.Recipe.Id}}" method="post">
+    <form id="recipeForm" action="/recipes/{{.Recipe.ID}}" method="post">
         <input type="hidden" name="_method" value="PUT">
 
         <div class="row mb-4">
@@ -147,7 +147,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <form id="deleteForm" action="/recipes/{{.Recipe.Id}}" method="post">
+                    <form id="deleteForm" action="/recipes/{{.Recipe.ID}}" method="post">
                         <input type="hidden" name="_method" value="DELETE">
                         <button type="submit" class="btn btn-danger">Delete Recipe</button>
                     </form>
@@ -175,7 +175,7 @@
                     <img src="{{.Recipe.ImageURLOrDefault}}" alt="{{.Recipe.Title}}" class="img-fluid w-100 mb-3">
                     <form
                             id="editImageForm"
-                            action="/recipes/{{.Recipe.Id}}/image"
+                            action="/recipes/{{.Recipe.ID}}/image"
                             method="post"
                             enctype="multipart/form-data"
                     >
@@ -192,7 +192,7 @@
                     {{if .Recipe.ImageURL}}
                         <form
                                 id="deleteImageForm"
-                                action="/recipes/{{.Recipe.Id}}/image"
+                                action="/recipes/{{.Recipe.ID}}/image"
                                 method="post"
                         >
                             <input type="hidden" name="_method" value="DELETE">
@@ -215,8 +215,8 @@
 {{end}}
 {{define "scripts"}}
     {{if .ShowImageModal}}
-        <script>
-            document.addEventListener("DOMContentLoaded", () => {
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
                 const modalElement = document.querySelector("#editImageModal");
                 const modal = new bootstrap.Modal(modalElement);
 
@@ -229,7 +229,7 @@
                 });
 
                 modal.show();
-            });
-        </script>
+        });
+    </script>
     {{end}}
 {{end}}

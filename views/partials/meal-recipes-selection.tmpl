@@ -4,7 +4,7 @@
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 {{.Title}}
                 <form method="post" action="/meals">
-                    <input type="hidden" name="recipe_id" value="{{.Id}}"/>
+                    <input type="hidden" name="recipe_id" value="{{.ID}}"/>
                     <input type="hidden" name="date" value="{{$.Date}}"/>
                     <button type="submit" class="btn btn-outline-secondary btn-sm">Add</button>
                 </form>

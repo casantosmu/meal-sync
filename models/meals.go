@@ -6,20 +6,25 @@ import (
 )
 
 type Meal struct {
-	Id      int
-	Date    time.Time
-	Recipes []Recipe
+	ID     int
+	Date   string
+	Recipe Recipe
 }
 
-func (m Meal) DateFormat() string {
+type MealsByDate struct {
+	Date  time.Time
+	Meals []Meal
+}
+
+func (m MealsByDate) DateFormat() string {
 	return m.Date.Format(DateFormat)
 }
 
-func (m Meal) DayOfWeek() string {
+func (m MealsByDate) DayOfWeek() string {
 	return m.Date.Weekday().String()
 }
 
-func (m Meal) MonthDay() string {
+func (m MealsByDate) MonthDay() string {
 	return m.Date.Format("Jan 2")
 }
 
@@ -27,30 +32,43 @@ type MealModel struct {
 	DB *sql.DB
 }
 
-func (m MealModel) GetWeeklyByDate(date string) ([]Meal, error) {
+func (m MealModel) Create(date string, recipeID int) (int, error) {
+	query := `INSERT INTO meals (date, recipe_id)
+	VALUES (?, ?)
+	RETURNING meal_id;`
+
+	var id int
+	err := m.DB.QueryRow(query, date, recipeID).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
+func (m MealModel) GetWeeklyByDate(date string) ([]MealsByDate, error) {
 	const daysInWeek = 7
 
 	startDate, err := getFirstDayOfWeek(date)
 	if err != nil {
-		return []Meal{}, err
+		return []MealsByDate{}, err
 	}
 	endDate := startDate.AddDate(0, 0, daysInWeek-1)
 
-	meals := make([]Meal, daysInWeek)
-	mealsMap := make(map[string]*Meal, daysInWeek)
+	meals := make([]MealsByDate, daysInWeek)
+	mealsMap := make(map[string]*MealsByDate, daysInWeek)
 
 	for i := range daysInWeek {
 		date := startDate.AddDate(0, 0, i)
 		dateStr := date.Format(DateFormat)
-		meal := Meal{
-			Date:    date,
-			Recipes: []Recipe{},
+		meals[i] = MealsByDate{
+			Date:  date,
+			Meals: []Meal{},
 		}
-		meals[i] = meal
 		mealsMap[dateStr] = &meals[i]
 	}
 
-	query := `SELECT m.date, r.recipe_id, r.title, COALESCE(img_url, '')
+	query := `SELECT m.meal_id, m.date, r.recipe_id, r.title, COALESCE(img_url, '')
 	FROM meals m
 	JOIN recipes r ON m.recipe_id = r.recipe_id
 	WHERE m.date BETWEEN ? AND ?;`
@@ -62,18 +80,36 @@ func (m MealModel) GetWeeklyByDate(date string) ([]Meal, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var date string
-		var r Recipe
-
-		err := rows.Scan(&date, &r.Id, &r.Title, &r.ImageURL)
+		var m Meal
+		err := rows.Scan(&m.ID, &m.Date, &m.Recipe.ID, &m.Recipe.Title, &m.Recipe.ImageURL)
 		if err != nil {
 			return nil, err
 		}
 
-		mealsMap[date].Recipes = append(mealsMap[date].Recipes, r)
+		mealsMap[m.Date].Meals = append(mealsMap[m.Date].Meals, m)
 	}
 
 	return meals, nil
+}
+
+func (m MealModel) RemoveByPk(id int) error {
+	query := "DELETE FROM meals WHERE meal_id = ?;"
+
+	result, err := m.DB.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrNotFound
+	}
+
+	return nil
 }
 
 func getFirstDayOfWeek(date string) (time.Time, error) {

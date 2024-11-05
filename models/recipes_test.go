@@ -119,6 +119,16 @@ func TestDirectionsToList(t *testing.T) {
 			input:    "Preheat oven to 350F.\n\nMix sugar, flour, & eggs.\n\nBake at 350°F for 30 minutes.",
 			expected: []string{"Preheat oven to 350F.", "Mix sugar, flour, & eggs.", "Bake at 350°F for 30 minutes."},
 		},
+		{
+			name:     "windows newlines",
+			input:    "Preheat oven to 350F.\r\n\r\nMix ingredients in a bowl.\r\n\r\nBake for 20 minutes.",
+			expected: []string{"Preheat oven to 350F.", "Mix ingredients in a bowl.", "Bake for 20 minutes."},
+		},
+		{
+			name:     "mixed newlines",
+			input:    "Preheat oven to 350F.\r\n\nMix ingredients.\n\nBake.",
+			expected: []string{"Preheat oven to 350F.", "Mix ingredients.", "Bake."},
+		},
 	}
 
 	for _, tc := range testCases {
