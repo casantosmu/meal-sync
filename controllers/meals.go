@@ -18,6 +18,7 @@ type MealController struct {
 	Models models.Models
 }
 
+// Mount registers the HTTP handlers.
 func (c MealController) Mount(srv *http.ServeMux) {
 	srv.HandleFunc("POST /meals", c.createPOST)
 	srv.HandleFunc("GET /meals", c.listGET)
@@ -26,13 +27,8 @@ func (c MealController) Mount(srv *http.ServeMux) {
 }
 
 func (c MealController) createPOST(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		c.View.ServerError(w, r, err)
-		return
-	}
-
-	date := r.FormValue("date")
-	recipeIDParam := r.FormValue("recipe_id")
+	date := r.PostFormValue("date")
+	recipeIDParam := r.PostFormValue("recipe_id")
 
 	if !isValidDate(date) || recipeIDParam == "" {
 		c.View.ClientError(w, r, http.StatusBadRequest)
@@ -73,26 +69,23 @@ func (c MealController) listGET(w http.ResponseWriter, r *http.Request) {
 	startDate := list[0].Date
 
 	data := map[string]any{
-		"MealsByDate":   list,
-		"MonthDayYear":  startDate.Format("Jan 2, 2006"),
-		"PrevWeekStart": startDate.AddDate(0, 0, -7).Format("2006-01-02"),
-		"NextWeekStart": startDate.AddDate(0, 0, 7).Format("2006-01-02"),
+		"MealsByDate":  list,
+		"MonthDayYear": startDate.Format("Jan 2, 2006"),
+		"PrevDate":     startDate.AddDate(0, 0, -7).Format("2006-01-02"),
+		"NextDate":     startDate.AddDate(0, 0, 7).Format("2006-01-02"),
 	}
 	c.View.Render(w, r, "meal-list.tmpl", data)
 }
 
 func (c MealController) removeDELETE(w http.ResponseWriter, r *http.Request) {
 	date := r.URL.Query().Get("date")
-	idParam := r.PathValue("id")
 
-	if idParam == "" {
-		err := errors.New("expected id path value")
-		c.View.ServerError(w, r, err)
-		return
-	}
-
-	id, err := strconv.Atoi(idParam)
+	id, err := pathInt(r, "id")
 	if err != nil {
+		if errors.Is(err, ErrPathValueNotFound) {
+			c.View.ServerError(w, r, err)
+			return
+		}
 		c.View.ClientError(w, r, http.StatusBadRequest)
 		return
 	}

@@ -91,11 +91,11 @@
     </ul>
 
     <div class="d-flex justify-content-between align-items-center pt-3">
-        <a href="/meals?date={{.PrevWeekStart}}" class="btn fs-5 fw-semibold" aria-label="Previous">
+        <a href="/meals?date={{.PrevDate}}" class="btn fs-5 fw-semibold" aria-label="Previous">
             <span aria-hidden="true">&laquo;</span>
         </a>
         <span class="fw-semibold">Week of {{.MonthDayYear}}</span>
-        <a href="/meals?date={{.NextWeekStart}}" class="btn fs-5 fw-semibold" aria-label="Next">
+        <a href="/meals?date={{.NextDate}}" class="btn fs-5 fw-semibold" aria-label="Next">
             <span aria-hidden="true">&raquo;</span>
         </a>
     </div>
@@ -127,34 +127,32 @@
 {{end}}
 {{block "scripts" .}}
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const modal = document.querySelector("#recipes-selection");
-            const searchForm = modal.querySelector("#search-form");
-            const searchInput = modal.querySelector("#search-input");
-            const searchDate = modal.querySelector("#search-date");
-            const searchResults = modal.querySelector("#search-results");
+        const modal = document.querySelector("#recipes-selection");
+        const searchForm = modal.querySelector("#search-form");
+        const searchInput = modal.querySelector("#search-input");
+        const searchDate = modal.querySelector("#search-date");
+        const searchResults = modal.querySelector("#search-results");
 
-            modal.addEventListener("show.bs.modal", async (event) => {
-                const date = event.relatedTarget.getAttribute("data-bs-date");
-                searchDate.value = date;
-                searchResults.innerHTML = await fetchRecipesHTML(date, "");
-            });
-
-            searchForm.addEventListener("submit", async (event) => {
-                event.preventDefault();
-                const search = searchInput.value;
-                const date = searchDate.value;
-                searchResults.innerHTML = await fetchRecipesHTML(date, search);
-            });
-
-            const fetchRecipesHTML = async (date, search) => {
-                const res = await fetch(`/meals/recipes/selection?date=${date}&search=${search}`);
-                if (!res.ok) {
-                    console.error(`Request error: ${res.status}`);
-                    return;
-                }
-                return res.text();
-            }
+        modal.addEventListener("show.bs.modal", async (event) => {
+            const date = event.relatedTarget.getAttribute("data-bs-date");
+            searchDate.value = date;
+            searchResults.innerHTML = await fetchRecipesHTML(date, "");
         });
+
+        searchForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const search = searchInput.value;
+            const date = searchDate.value;
+            searchResults.innerHTML = await fetchRecipesHTML(date, search);
+        });
+
+        const fetchRecipesHTML = async (date, search) => {
+            const res = await fetch(`/meals/recipes/selection?date=${date}&search=${search}`);
+            if (!res.ok) {
+                console.error(`Request error: ${res.status}`);
+                return;
+            }
+            return res.text();
+        }
     </script>
 {{end}}

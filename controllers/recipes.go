@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/casantosmu/meal-sync/models"
@@ -20,10 +19,7 @@ import (
 
 const maxFileSize = 1 * 1024 * 1024 // 1 MB
 
-var (
-	ErrFileFormat      = errors.New("Unsupported file format.")
-	ShowImageModalName = "flash_show_image_modal"
-)
+var ErrFileFormat = errors.New("Unsupported file format.")
 
 type RecipeController struct {
 	Logger *slog.Logger
@@ -31,6 +27,7 @@ type RecipeController struct {
 	Models models.Models
 }
 
+// Mount registers the HTTP handlers.
 func (c RecipeController) Mount(srv *http.ServeMux) {
 	srv.HandleFunc("POST /recipes", c.createPOST)
 	srv.HandleFunc("GET /{$}", c.listGET)
@@ -43,12 +40,7 @@ func (c RecipeController) Mount(srv *http.ServeMux) {
 }
 
 func (c RecipeController) createPOST(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		c.View.ServerError(w, r, err)
-		return
-	}
-
-	title := r.FormValue("title")
+	title := r.PostFormValue("title")
 
 	if strings.TrimSpace(title) == "" {
 		c.View.SetErrorToast(w, "Title must not be blank.")
@@ -67,12 +59,7 @@ func (c RecipeController) createPOST(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c RecipeController) listGET(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		c.View.ServerError(w, r, err)
-		return
-	}
-
-	search := r.FormValue("search")
+	search := r.PostFormValue("search")
 
 	list, err := c.Models.Recipe.Search(search)
 	if err != nil {
@@ -85,15 +72,12 @@ func (c RecipeController) listGET(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c RecipeController) getGET(w http.ResponseWriter, r *http.Request) {
-	idParam := r.PathValue("id")
-	if idParam == "" {
-		err := errors.New("expected id path value")
-		c.View.ServerError(w, r, err)
-		return
-	}
-
-	id, err := strconv.Atoi(idParam)
+	id, err := pathInt(r, "id")
 	if err != nil {
+		if errors.Is(err, ErrPathValueNotFound) {
+			c.View.ServerError(w, r, err)
+			return
+		}
 		c.View.ClientError(w, r, http.StatusBadRequest)
 		return
 	}
@@ -113,15 +97,12 @@ func (c RecipeController) getGET(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c RecipeController) updateGET(w http.ResponseWriter, r *http.Request) {
-	idParam := r.PathValue("id")
-	if idParam == "" {
-		err := errors.New("expected id path value")
-		c.View.ServerError(w, r, err)
-		return
-	}
-
-	id, err := strconv.Atoi(idParam)
+	id, err := pathInt(r, "id")
 	if err != nil {
+		if errors.Is(err, ErrPathValueNotFound) {
+			c.View.ServerError(w, r, err)
+			return
+		}
 		c.View.ClientError(w, r, http.StatusBadRequest)
 		return
 	}
@@ -136,7 +117,7 @@ func (c RecipeController) updateGET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	showImageModal, err := c.View.GetFlashBool(w, r, ShowImageModalName)
+	showImageModal, err := c.shouldShowEditImageModal(w, r)
 	if err != nil {
 		c.View.ServerError(w, r, err)
 		return
@@ -147,28 +128,20 @@ func (c RecipeController) updateGET(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c RecipeController) updatePUT(w http.ResponseWriter, r *http.Request) {
-	idParam := r.PathValue("id")
-	if idParam == "" {
-		err := errors.New("expected id path value")
-		c.View.ServerError(w, r, err)
-		return
-	}
-
-	id, err := strconv.Atoi(idParam)
+	id, err := pathInt(r, "id")
 	if err != nil {
+		if errors.Is(err, ErrPathValueNotFound) {
+			c.View.ServerError(w, r, err)
+			return
+		}
 		c.View.ClientError(w, r, http.StatusBadRequest)
 		return
 	}
 
-	if err := r.ParseForm(); err != nil {
-		c.View.ServerError(w, r, err)
-		return
-	}
-
-	title := r.FormValue("title")
-	description := r.FormValue("description")
-	ingredients := r.FormValue("ingredients")
-	directions := r.FormValue("directions")
+	title := r.PostFormValue("title")
+	description := r.PostFormValue("description")
+	ingredients := r.PostFormValue("ingredients")
+	directions := r.PostFormValue("directions")
 
 	validationErrs := map[string]string{}
 
@@ -199,15 +172,12 @@ func (c RecipeController) updatePUT(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c RecipeController) removeDELETE(w http.ResponseWriter, r *http.Request) {
-	idParam := r.PathValue("id")
-	if idParam == "" {
-		err := errors.New("expected id path value")
-		c.View.ServerError(w, r, err)
-		return
-	}
-
-	id, err := strconv.Atoi(idParam)
+	id, err := pathInt(r, "id")
 	if err != nil {
+		if errors.Is(err, ErrPathValueNotFound) {
+			c.View.ServerError(w, r, err)
+			return
+		}
 		c.View.ClientError(w, r, http.StatusBadRequest)
 		return
 	}
@@ -229,21 +199,13 @@ func (c RecipeController) removeDELETE(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c RecipeController) imagePUT(w http.ResponseWriter, r *http.Request) {
-	idParam := r.PathValue("id")
-	if idParam == "" {
-		err := errors.New("expected id path value")
-		c.View.ServerError(w, r, err)
-		return
-	}
-
-	id, err := strconv.Atoi(idParam)
+	id, err := pathInt(r, "id")
 	if err != nil {
+		if errors.Is(err, ErrPathValueNotFound) {
+			c.View.ServerError(w, r, err)
+			return
+		}
 		c.View.ClientError(w, r, http.StatusBadRequest)
-		return
-	}
-
-	if err := r.ParseForm(); err != nil {
-		c.View.ServerError(w, r, err)
 		return
 	}
 
@@ -251,7 +213,7 @@ func (c RecipeController) imagePUT(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, http.ErrMissingFile) {
 			c.View.SetErrorToast(w, "Please upload an image file.")
-			c.View.SetFlashBool(w, ShowImageModalName, true)
+			c.setShowEditImageModal(w)
 			http.Redirect(w, r, fmt.Sprintf("/recipes/%d/edit", id), http.StatusSeeOther)
 			return
 		}
@@ -262,17 +224,18 @@ func (c RecipeController) imagePUT(w http.ResponseWriter, r *http.Request) {
 
 	if handler.Size > maxFileSize {
 		c.View.SetErrorToast(w, "File size exceeds 1 MB. Please upload a smaller file.")
-		c.View.SetFlashBool(w, ShowImageModalName, true)
+		c.setShowEditImageModal(w)
 		http.Redirect(w, r, fmt.Sprintf("/recipes/%d/edit", id), http.StatusSeeOther)
 		return
 	}
 
 	ext := filepath.Ext(handler.Filename)
 
-	if err = validateFileFormat(file, ext); err != nil {
+	err = validateFileFormat(file, ext)
+	if err != nil {
 		if errors.Is(err, ErrFileFormat) {
 			c.View.SetErrorToast(w, "Unsupported file format. Please upload a .jpg, .jpeg, or .png file.")
-			c.View.SetFlashBool(w, ShowImageModalName, true)
+			c.setShowEditImageModal(w)
 			http.Redirect(w, r, fmt.Sprintf("/recipes/%d/edit", id), http.StatusSeeOther)
 			return
 		}
@@ -297,22 +260,19 @@ func (c RecipeController) imagePUT(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c.View.SetSuccessToast(w, "Your image has been uploaded.")
-	c.View.SetFlashBool(w, ShowImageModalName, true)
+	c.setShowEditImageModal(w)
 
 	c.Logger.Info("Image updated", "id", id, "path", path)
 	http.Redirect(w, r, fmt.Sprintf("/recipes/%d/edit", id), http.StatusSeeOther)
 }
 
 func (c RecipeController) imageDELETE(w http.ResponseWriter, r *http.Request) {
-	idParam := r.PathValue("id")
-	if idParam == "" {
-		err := errors.New("expected id path value")
-		c.View.ServerError(w, r, err)
-		return
-	}
-
-	id, err := strconv.Atoi(idParam)
+	id, err := pathInt(r, "id")
 	if err != nil {
+		if errors.Is(err, ErrPathValueNotFound) {
+			c.View.ServerError(w, r, err)
+			return
+		}
 		c.View.ClientError(w, r, http.StatusBadRequest)
 		return
 	}
@@ -343,10 +303,20 @@ func (c RecipeController) imageDELETE(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c.View.SetSuccessToast(w, "The image has been deleted.")
-	c.View.SetFlashBool(w, ShowImageModalName, true)
+	c.setShowEditImageModal(w)
 
 	c.Logger.Info("Image deleted", "id", id, "path", path)
 	http.Redirect(w, r, fmt.Sprintf("/recipes/%d/edit", id), http.StatusSeeOther)
+}
+
+// setShowEditImageModal sets the flash to show the image edit modal on reload.
+func (c *RecipeController) setShowEditImageModal(w http.ResponseWriter) {
+	c.View.SetFlashBool(w, "flash_show_image_modal", true)
+}
+
+// shouldShowEditImageModal retrieves the flash to conditionally show the image edit modal.
+func (c *RecipeController) shouldShowEditImageModal(w http.ResponseWriter, r *http.Request) (bool, error) {
+	return c.View.GetFlashBool(w, r, "flash_show_image_modal")
 }
 
 func validateFileFormat(file multipart.File, ext string) error {

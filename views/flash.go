@@ -22,14 +22,17 @@ type flash struct {
 	Errors map[string]string
 }
 
+// SetSuccessToast saves a success message for display on the next page load.
 func (v View) SetSuccessToast(w http.ResponseWriter, value string) {
 	setFlashValue(w, successName, []byte(value))
 }
 
+// SetErrorToast saves an error message for display on the next page load.
 func (v View) SetErrorToast(w http.ResponseWriter, value string) {
 	setFlashValue(w, errorName, []byte(value))
 }
 
+// SetErrors saves form validation errors to be shown on the next page load.
 func (v View) SetErrors(w http.ResponseWriter, errs map[string]string) {
 	serialized, err := json.Marshal(errs)
 	if err != nil {
@@ -61,6 +64,7 @@ func setFlashValue(w http.ResponseWriter, name string, value []byte) {
 	http.SetCookie(w, c)
 }
 
+// getFlashValue retrieves and decodes a flash message from a cookie, clearing it afterward.
 func getFlashValue(w http.ResponseWriter, r *http.Request, name string) ([]byte, error) {
 	c, err := r.Cookie(name)
 	if err != nil {

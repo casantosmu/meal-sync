@@ -216,20 +216,19 @@
 {{define "scripts"}}
     {{if .ShowImageModal}}
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-                const modalElement = document.querySelector("#editImageModal");
-                const modal = new bootstrap.Modal(modalElement);
+        const modalElement = document.querySelector("#editImageModal");
+        const modal = new bootstrap.Modal(modalElement);
 
-                let isFirstTime = true;
-                modalElement.addEventListener("shown.bs.modal", () => {
-                    if (isFirstTime) {
-                        modalElement.classList.add("fade");
-                        isFirstTime = false;
-                    }
-                });
-
-                modal.show();
+        let isFirstTime = true;
+        modalElement.addEventListener("shown.bs.modal", () => {
+            // Add fade only after initial display to maintain UX
+            if (isFirstTime) {
+                modalElement.classList.add("fade");
+                isFirstTime = false;
+            }
         });
+
+        modal.show();
     </script>
     {{end}}
 {{end}}

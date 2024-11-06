@@ -1,8 +1,10 @@
-package models
+package models_test
 
 import (
 	"reflect"
 	"testing"
+
+	"github.com/casantosmu/meal-sync/models"
 )
 
 func TestIngredientToList(t *testing.T) {
@@ -65,7 +67,7 @@ func TestIngredientToList(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := Recipe{Ingredients: tc.input}.IngredientsToList()
+			got := models.Recipe{Ingredients: tc.input}.IngredientsToList()
 			if !reflect.DeepEqual(got, tc.expected) {
 				t.Errorf("Test case: %s - expected %v, but got %v", tc.name, tc.expected, got)
 			}
@@ -133,7 +135,7 @@ func TestDirectionsToList(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := Recipe{Directions: tc.input}.DirectionsToList()
+			got := models.Recipe{Directions: tc.input}.DirectionsToList()
 			if !reflect.DeepEqual(got, tc.expected) {
 				t.Errorf("Test case: %s - expected %v, but got %v", tc.name, tc.expected, got)
 			}

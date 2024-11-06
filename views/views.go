@@ -48,6 +48,8 @@ func New(logger *slog.Logger) (View, error) {
 	return View{logger: logger, pages: pages, partials: partials}, nil
 }
 
+// Render generates a complete HTML page with layout and flash messages.
+// Used for full-page responses requiring a complete HTML document.
 func (v View) Render(w http.ResponseWriter, r *http.Request, page string, data map[string]any) {
 	flash, err := getFlash(w, r)
 	if err != nil {
@@ -77,6 +79,8 @@ func (v View) Render(w http.ResponseWriter, r *http.Request, page string, data m
 	}
 }
 
+// Partial renders an HTML fragment (partial) without a full layout.
+// Used for sections of a page, often in AJAX responses.
 func (v View) Partial(w http.ResponseWriter, r *http.Request, partial string, data map[string]any) {
 	tmpl, ok := v.partials[partial]
 	if !ok {
@@ -98,6 +102,7 @@ func (v View) Partial(w http.ResponseWriter, r *http.Request, partial string, da
 	}
 }
 
+// ServerError sends a 500 error response and logs the error.
 func (t View) ServerError(w http.ResponseWriter, r *http.Request, err error) {
 	var (
 		method = r.Method
@@ -108,6 +113,7 @@ func (t View) ServerError(w http.ResponseWriter, r *http.Request, err error) {
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 
+// ClientError sends a specified HTTP error status to the user.
 func (t View) ClientError(w http.ResponseWriter, r *http.Request, status int) {
 	http.Error(w, http.StatusText(status), status)
 }

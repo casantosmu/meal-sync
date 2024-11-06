@@ -195,11 +195,9 @@ c5.1, 0, 9.3-4.3, 9.3-9.3S485.7, 114.45, 480.7, 114.45z"/>
 
     <script src="/static/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            document.querySelectorAll(".toast").forEach((toastEl) => {
-                const toast = new bootstrap.Toast(toastEl);
-                toast.show();
-            });
+        document.querySelectorAll(".toast").forEach((toastEl) => {
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
         });
     </script>
     {{block "scripts" .}}{{end}}

@@ -112,6 +112,7 @@ func (m MealModel) RemoveByPk(id int) error {
 	return nil
 }
 
+// getFirstDayOfWeek calculates the start of the week based on a given date.
 func getFirstDayOfWeek(date string) (time.Time, error) {
 	if date == "" {
 		date = time.Now().Format(DateFormat)
