@@ -35,6 +35,8 @@ func (c RecipeController) Mount(srv *http.ServeMux) {
 	srv.HandleFunc("GET /recipes/{id}/edit", c.updateGET)
 	srv.HandleFunc("PUT /recipes/{id}", c.updatePUT)
 	srv.HandleFunc("DELETE /recipes/{id}", c.removeDELETE)
+
+	srv.HandleFunc("GET /recipes/{id}/image", c.imageGET)
 	srv.HandleFunc("PUT /recipes/{id}/image", c.imagePUT)
 	srv.HandleFunc("DELETE /recipes/{id}/image", c.imageDELETE)
 }
@@ -117,13 +119,7 @@ func (c RecipeController) updateGET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	showImageModal, err := c.shouldShowEditImageModal(w, r)
-	if err != nil {
-		c.View.ServerError(w, r, err)
-		return
-	}
-
-	data := map[string]any{"Recipe": recipe, "ShowImageModal": showImageModal}
+	data := map[string]any{"Recipe": recipe}
 	c.View.Render(w, r, "recipe-edit.tmpl", data)
 }
 
@@ -198,6 +194,31 @@ func (c RecipeController) removeDELETE(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
+func (c RecipeController) imageGET(w http.ResponseWriter, r *http.Request) {
+	id, err := pathInt(r, "id")
+	if err != nil {
+		if errors.Is(err, ErrPathValueNotFound) {
+			c.View.ServerError(w, r, err)
+			return
+		}
+		c.View.ClientError(w, r, http.StatusBadRequest)
+		return
+	}
+
+	recipe, err := c.Models.Recipe.GetByPk(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			c.View.ClientError(w, r, http.StatusNotFound)
+			return
+		}
+		c.View.ServerError(w, r, err)
+		return
+	}
+
+	data := map[string]any{"Recipe": recipe}
+	c.View.Partial(w, r, "recipe-image-upload.tmpl", data)
+}
+
 func (c RecipeController) imagePUT(w http.ResponseWriter, r *http.Request) {
 	id, err := pathInt(r, "id")
 	if err != nil {
@@ -213,8 +234,7 @@ func (c RecipeController) imagePUT(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, http.ErrMissingFile) {
 			c.View.SetErrorToast(w, "Please upload an image file.")
-			c.setShowEditImageModal(w)
-			http.Redirect(w, r, fmt.Sprintf("/recipes/%d/edit", id), http.StatusSeeOther)
+			http.Redirect(w, r, fmt.Sprintf("/recipes/%d/image", id), http.StatusSeeOther)
 			return
 		}
 		c.View.ServerError(w, r, err)
@@ -224,8 +244,7 @@ func (c RecipeController) imagePUT(w http.ResponseWriter, r *http.Request) {
 
 	if handler.Size > maxFileSize {
 		c.View.SetErrorToast(w, "File size exceeds 1 MB. Please upload a smaller file.")
-		c.setShowEditImageModal(w)
-		http.Redirect(w, r, fmt.Sprintf("/recipes/%d/edit", id), http.StatusSeeOther)
+		http.Redirect(w, r, fmt.Sprintf("/recipes/%d/image", id), http.StatusSeeOther)
 		return
 	}
 
@@ -235,8 +254,7 @@ func (c RecipeController) imagePUT(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, ErrFileFormat) {
 			c.View.SetErrorToast(w, "Unsupported file format. Please upload a .jpg, .jpeg, or .png file.")
-			c.setShowEditImageModal(w)
-			http.Redirect(w, r, fmt.Sprintf("/recipes/%d/edit", id), http.StatusSeeOther)
+			http.Redirect(w, r, fmt.Sprintf("/recipes/%d/image", id), http.StatusSeeOther)
 			return
 		}
 		c.View.ServerError(w, r, err)
@@ -260,10 +278,9 @@ func (c RecipeController) imagePUT(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c.View.SetSuccessToast(w, "Your image has been uploaded.")
-	c.setShowEditImageModal(w)
 
 	c.Logger.Info("Image updated", "id", id, "path", path)
-	http.Redirect(w, r, fmt.Sprintf("/recipes/%d/edit", id), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/recipes/%d/image", id), http.StatusSeeOther)
 }
 
 func (c RecipeController) imageDELETE(w http.ResponseWriter, r *http.Request) {
@@ -303,20 +320,9 @@ func (c RecipeController) imageDELETE(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c.View.SetSuccessToast(w, "The image has been deleted.")
-	c.setShowEditImageModal(w)
 
 	c.Logger.Info("Image deleted", "id", id, "path", path)
-	http.Redirect(w, r, fmt.Sprintf("/recipes/%d/edit", id), http.StatusSeeOther)
-}
-
-// setShowEditImageModal sets the flash to show the image edit modal on reload.
-func (c *RecipeController) setShowEditImageModal(w http.ResponseWriter) {
-	c.View.SetFlashBool(w, "flash_show_image_modal", true)
-}
-
-// shouldShowEditImageModal retrieves the flash to conditionally show the image edit modal.
-func (c *RecipeController) shouldShowEditImageModal(w http.ResponseWriter, r *http.Request) (bool, error) {
-	return c.View.GetFlashBool(w, r, "flash_show_image_modal")
+	http.Redirect(w, r, fmt.Sprintf("/recipes/%d/image", id), http.StatusSeeOther)
 }
 
 func validateFileFormat(file multipart.File, ext string) error {

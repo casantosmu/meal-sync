@@ -1,24 +1,61 @@
-{{if .Recipes}}
-    <ul class="list-group" id="search-results">
-        {{range .Recipes}}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                {{.Title}}
-                <form method="post" action="/meals">
-                    <input type="hidden" name="recipe_id" value="{{.ID}}"/>
-                    <input type="hidden" name="date" value="{{$.Date}}"/>
-                    <button type="submit" class="btn btn-outline-secondary btn-sm">Add</button>
+{{define "main"}}
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <form id="searchRecipes" class="me-3">
+                    <input type="hidden" name="date" value="{{.Date}}">
+                    <div class="input-group">
+                        <input
+                                value="{{.Search}}"
+                                type="search"
+                                name="search"
+                                class="form-control"
+                                placeholder="Search recipes..."
+                                aria-label="Search recipes"
+                        >
+                        <button type="submit" class="btn btn-secondary">Search</button>
+                    </div>
                 </form>
-            </li>
-        {{end}}
-    </ul>
-{{else}}
-    <div class="text-center">
-        {{if .Search}}
-            <p class="lead">No recipes match your search</p>
-            <p class="text-muted">Try different keywords or add a new recipe to get started.</p>
-        {{else}}
-            <p class="lead">No recipes available</p>
-            <p class="text-muted">Add your first recipe and start planning meals.</p>
-        {{end}}
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {{if .Recipes}}
+                    <ul class="list-group" id="search-results">
+                        {{range .Recipes}}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{.Title}}
+                                <form method="post" action="/meals">
+                                    <input type="hidden" name="recipe_id" value="{{.ID}}"/>
+                                    <input type="hidden" name="date" value="{{$.Date}}"/>
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm">Add</button>
+                                </form>
+                            </li>
+                        {{end}}
+                    </ul>
+                {{else}}
+                    <div class="text-center">
+                        {{if .Search}}
+                            <p class="lead">No recipes match your search</p>
+                            <p class="text-muted">Try different keywords or add a new recipe to get started.</p>
+                        {{else}}
+                            <p class="lead">No recipes available</p>
+                            <p class="text-muted">Add your first recipe and start planning meals.</p>
+                        {{end}}
+                    </div>
+                {{end}}
+            </div>
+        </div>
     </div>
+
+    <script>
+        document.querySelector("#searchRecipes").addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const date = event.target.elements.date.value;
+            const search = event.target.elements.search.value;
+            const url = `/meals/recipes/selection?date=${date}&search=${search}`;
+
+            await fetchHTML(modal, url);
+        });
+    </script>
 {{end}}

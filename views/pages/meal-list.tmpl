@@ -11,7 +11,7 @@
                             type="button"
                             class="btn btn-outline-secondary"
                             data-bs-toggle="modal"
-                            data-bs-target="#recipes-selection"
+                            data-bs-target="#recipesModal"
                             data-bs-date="{{.DateFormat}}"
                     >
                         <svg
@@ -30,13 +30,16 @@
                 <ul class="list-unstyled">
                     {{range .Meals}}
                         <li class="d-flex align-items-center justify-content-between pt-2">
-                            <a href="/recipes/{{.Recipe.ID}}" class="d-flex align-items-center fw-semibold text-reset link-underline-secondary link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover">
+                            <a
+                                    href="/recipes/{{.Recipe.ID}}"
+                                    class="d-flex align-items-center fw-semibold text-reset link-underline-secondary link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover"
+                            >
                                 <img
-                                    src="{{.Recipe.ImageURLOrDefault}}"
-                                    class="me-3 rounded object-fit-cover"
-                                    alt="{{.Recipe.Title}}"
-                                    width="50"
-                                    height="50"
+                                        src="{{.Recipe.ImageURLOrDefault}}"
+                                        class="me-3 rounded object-fit-cover"
+                                        alt="{{.Recipe.Title}}"
+                                        width="50"
+                                        height="50"
                                 >
                                 {{.Recipe.Title}}
                             </a>
@@ -100,59 +103,17 @@
         </a>
     </div>
 
-    <div class="modal fade" id="recipes-selection" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <form id="search-form" class="me-3">
-                        <input type="hidden" name="date" id="search-date" value="">
-                        <div class="input-group">
-                            <input
-                                    type="search"
-                                    name="search"
-                                    id="search-input"
-                                    class="form-control"
-                                    placeholder="Search recipes..."
-                                    aria-label="Search recipes"
-                            >
-                            <button type="submit" class="btn btn-secondary">Search</button>
-                        </div>
-                    </form>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div id="search-results" class="modal-body"></div>
-            </div>
-        </div>
+    <div class="modal fade" id="recipesModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog"></div>
     </div>
 {{end}}
 {{block "scripts" .}}
     <script>
-        const modal = document.querySelector("#recipes-selection");
-        const searchForm = modal.querySelector("#search-form");
-        const searchInput = modal.querySelector("#search-input");
-        const searchDate = modal.querySelector("#search-date");
-        const searchResults = modal.querySelector("#search-results");
-
+        const modal = document.querySelector("#recipesModal");
         modal.addEventListener("show.bs.modal", async (event) => {
             const date = event.relatedTarget.getAttribute("data-bs-date");
-            searchDate.value = date;
-            searchResults.innerHTML = await fetchRecipesHTML(date, "");
+            const url = `/meals/recipes/selection?date=${date}`;
+            await fetchHTML(modal, url);
         });
-
-        searchForm.addEventListener("submit", async (event) => {
-            event.preventDefault();
-            const search = searchInput.value;
-            const date = searchDate.value;
-            searchResults.innerHTML = await fetchRecipesHTML(date, search);
-        });
-
-        const fetchRecipesHTML = async (date, search) => {
-            const res = await fetch(`/meals/recipes/selection?date=${date}&search=${search}`);
-            if (!res.ok) {
-                console.error(`Request error: ${res.status}`);
-                return;
-            }
-            return res.text();
-        }
     </script>
 {{end}}

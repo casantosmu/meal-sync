@@ -22,17 +22,17 @@ type flash struct {
 	Errors map[string]string
 }
 
-// SetSuccessToast saves a success message for display on the next page load.
+// SetSuccessToast saves a success message for display on the next Render or Partial call.
 func (v View) SetSuccessToast(w http.ResponseWriter, value string) {
 	setFlashValue(w, successName, []byte(value))
 }
 
-// SetErrorToast saves an error message for display on the next page load.
+// SetErrorToast saves an error message for display on the next Render or Partial call.
 func (v View) SetErrorToast(w http.ResponseWriter, value string) {
 	setFlashValue(w, errorName, []byte(value))
 }
 
-// SetErrors saves form validation errors to be shown on the next page load.
+// SetErrors saves form validation errors to be shown on the next Render or Partial call.
 func (v View) SetErrors(w http.ResponseWriter, errs map[string]string) {
 	serialized, err := json.Marshal(errs)
 	if err != nil {
@@ -40,22 +40,6 @@ func (v View) SetErrors(w http.ResponseWriter, errs map[string]string) {
 		return
 	}
 	setFlashValue(w, errorsName, serialized)
-}
-
-func (v View) SetFlashBool(w http.ResponseWriter, name string, value bool) {
-	str := "true"
-	if !value {
-		str = "false"
-	}
-	setFlashValue(w, name, []byte(str))
-}
-
-func (v View) GetFlashBool(w http.ResponseWriter, r *http.Request, name string) (bool, error) {
-	value, err := getFlashValue(w, r, name)
-	if err != nil {
-		return false, err
-	}
-	return string(value) == "true", nil
 }
 
 func setFlashValue(w http.ResponseWriter, name string, value []byte) {

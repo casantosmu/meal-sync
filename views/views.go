@@ -28,24 +28,52 @@ func New(logger *slog.Logger) (View, error) {
 	pages := make(map[string]*template.Template, len(pagesFiles))
 	for _, page := range pagesFiles {
 		name := filepath.Base(page)
-		tmpl, err := template.New(name).ParseFiles("./views/layouts/base.tmpl", page)
+
+		tmpl, err := template.New(name).ParseFiles("./views/layouts/base.tmpl")
 		if err != nil {
 			return View{}, err
 		}
+
+		tmpl, err = tmpl.ParseGlob("./views/templates/*.tmpl")
+		if err != nil {
+			return View{}, err
+		}
+
+		tmpl, err = tmpl.ParseFiles(page)
+		if err != nil {
+			return View{}, err
+		}
+
 		pages[name] = tmpl
 	}
 
 	partials := make(map[string]*template.Template, len(partialsFiles))
 	for _, partial := range partialsFiles {
 		name := filepath.Base(partial)
-		tmpl, err := template.New(name).ParseFiles(partial)
+
+		tmpl, err := template.New(name).ParseFiles("./views/layouts/partial.tmpl")
 		if err != nil {
 			return View{}, err
 		}
+
+		tmpl, err = tmpl.ParseGlob("./views/templates/*.tmpl")
+		if err != nil {
+			return View{}, err
+		}
+
+		tmpl, err = tmpl.ParseFiles(partial)
+		if err != nil {
+			return View{}, err
+		}
+
 		partials[name] = tmpl
 	}
 
-	return View{logger: logger, pages: pages, partials: partials}, nil
+	return View{
+		logger:   logger,
+		pages:    pages,
+		partials: partials,
+	}, nil
 }
 
 // Render generates a complete HTML page with layout and flash messages.
@@ -79,9 +107,17 @@ func (v View) Render(w http.ResponseWriter, r *http.Request, page string, data m
 	}
 }
 
-// Partial renders an HTML fragment (partial) without a full layout.
+// Partial renders an HTML fragment (partial) without a full layout and includes flash messages.
 // Used for sections of a page, often in AJAX responses.
 func (v View) Partial(w http.ResponseWriter, r *http.Request, partial string, data map[string]any) {
+	flash, err := getFlash(w, r)
+	if err != nil {
+		v.ServerError(w, r, err)
+		return
+	}
+	data["Toast"] = flash.Toast
+	data["Errors"] = flash.Errors
+
 	tmpl, ok := v.partials[partial]
 	if !ok {
 		err := fmt.Errorf("partial template '%s' does not exist", partial)
@@ -90,7 +126,7 @@ func (v View) Partial(w http.ResponseWriter, r *http.Request, partial string, da
 	}
 
 	buf := new(bytes.Buffer)
-	err := tmpl.Execute(buf, data)
+	err = tmpl.ExecuteTemplate(buf, "partial", data)
 	if err != nil {
 		v.ServerError(w, r, err)
 		return
