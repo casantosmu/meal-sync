@@ -9,6 +9,10 @@ import (
 	"text/template"
 )
 
+type contextKey string
+
+const NonceKey contextKey = "nonce"
+
 type View struct {
 	logger   *slog.Logger
 	pages    map[string]*template.Template
@@ -87,6 +91,11 @@ func (v View) Render(w http.ResponseWriter, r *http.Request, page string, data m
 	data["Toast"] = flash.Toast
 	data["Errors"] = flash.Errors
 
+	nonce, ok := r.Context().Value(NonceKey).(string)
+	if ok {
+		data["Nonce"] = nonce
+	}
+
 	tmpl, ok := v.pages[page]
 	if !ok {
 		err := fmt.Errorf("template '%s' does not exist", page)
@@ -117,6 +126,11 @@ func (v View) Partial(w http.ResponseWriter, r *http.Request, partial string, da
 	}
 	data["Toast"] = flash.Toast
 	data["Errors"] = flash.Errors
+
+	nonce, ok := r.Context().Value(NonceKey).(string)
+	if ok {
+		data["Nonce"] = nonce
+	}
 
 	tmpl, ok := v.partials[partial]
 	if !ok {

@@ -160,8 +160,8 @@ c5.1, 0, 9.3-4.3, 9.3-9.3S485.7, 114.45, 480.7, 114.45z"/>
         {{template "toast" .}}
     </div>
 
-    <script src="/static/js/bootstrap.bundle.min.js"></script>
-    <script>
+    <script nonce="{{.Nonce}}" src="/static/js/bootstrap.bundle.min.js"></script>
+    <script nonce="{{.Nonce}}">
         const toastContainer = document.querySelector(".toast-container"); 
 
         const showAllToast = () => {
@@ -183,17 +183,18 @@ c5.1, 0, 9.3-4.3, 9.3-9.3S485.7, 114.45, 480.7, 114.45z"/>
 
             const main = tmp.querySelector("#main");
             const toast = tmp.querySelector("#toast");
+            const scripts = tmp.querySelector("#scripts");
 
-            // Load and show toasts
+            el.innerHTML = main.innerHTML;
+
             toastContainer.innerHTML = toast.innerHTML;
             showAllToast();
 
-            // Load content and scripts
-            el.innerHTML = main.innerHTML;
-            el.querySelectorAll("script").forEach(oldScript => {
+            // Load scripts
+            scripts.querySelectorAll("script").forEach(oldScript => {
                 const newScript = document.createElement("script");
                 newScript.textContent = oldScript.textContent;
-                oldScript.parentNode.replaceChild(newScript, oldScript);
+                el.appendChild(newScript);
             });
         };
 

@@ -352,13 +352,13 @@ func validateFileFormat(file multipart.File, ext string) error {
 }
 
 func generateFilename(ext string) (string, error) {
-	buf := make([]byte, 16)
-	_, err := rand.Read(buf)
+	bytes := make([]byte, 16)
+	_, err := rand.Read(bytes)
 	if err != nil {
 		return "", err
 	}
 
-	return hex.EncodeToString(buf) + ext, nil
+	return hex.EncodeToString(bytes) + ext, nil
 }
 
 func uploadImage(file multipart.File, ext string) (string, error) {

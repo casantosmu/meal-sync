@@ -5,8 +5,10 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"slices"
 
 	"github.com/casantosmu/meal-sync/controllers"
+	"github.com/casantosmu/meal-sync/middlewares"
 	"github.com/casantosmu/meal-sync/migrations"
 	"github.com/casantosmu/meal-sync/models"
 	"github.com/casantosmu/meal-sync/views"
@@ -41,10 +43,17 @@ func main() {
 		Meal:   models.MealModel{DB: db},
 	}
 
-	srv := buildServer([]controller{
-		controllers.RecipeController{Logger: logger, View: view, Models: models},
-		controllers.MealController{Logger: logger, View: view, Models: models},
-	})
+	srv := buildServer(
+		[]controller{
+			controllers.RecipeController{Logger: logger, View: view, Models: models},
+			controllers.MealController{Logger: logger, View: view, Models: models},
+		},
+		[]middleware{
+			middlewares.RecoverPanic(view),
+			middlewares.MethodOverride,
+			middlewares.LogRequest(logger),
+			middlewares.Security,
+		})
 
 	logger.Info("Starting server on :3000")
 
@@ -72,7 +81,9 @@ type controller interface {
 	Mount(mux *http.ServeMux)
 }
 
-func buildServer(controllers []controller) http.Handler {
+type middleware func(next http.Handler) http.Handler
+
+func buildServer(controllers []controller, middlewares []middleware) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
@@ -82,17 +93,11 @@ func buildServer(controllers []controller) http.Handler {
 		controller.Mount(mux)
 	}
 
-	return methodOverride(mux)
-}
+	slices.Reverse(middlewares)
+	var next http.Handler = mux
+	for _, middleware := range middlewares {
+		next = middleware(next)
+	}
 
-func methodOverride(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "POST" {
-			method := r.PostFormValue("_method")
-			if method == "PUT" || method == "DELETE" {
-				r.Method = method
-			}
-		}
-		next.ServeHTTP(w, r)
-	})
+	return next
 }
