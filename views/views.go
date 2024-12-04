@@ -11,7 +11,7 @@ import (
 
 type contextKey string
 
-const NonceKey contextKey = "nonce"
+const NonceKey contextKey = "nonce" // Define a key for storing the nonce in the request context
 
 type View struct {
 	logger   *slog.Logger

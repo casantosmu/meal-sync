@@ -141,6 +141,7 @@ c5.1, 0, 9.3-4.3, 9.3-9.3S485.7, 114.45, 480.7, 114.45z"/>
             });
         };
 
+        // Function to fetch and render HTML content into a specified element
         const fetchHTML = async (el, url, options) => {
             const res = await fetch(url, options);
             if (!res.ok) {
@@ -151,16 +152,19 @@ c5.1, 0, 9.3-4.3, 9.3-9.3S485.7, 114.45, 480.7, 114.45z"/>
             const tmp = document.createElement("div");
             tmp.innerHTML = await res.text();
 
+            // Extract specific parts of the response
             const main = tmp.querySelector("#main");
             const toast = tmp.querySelector("#toast");
             const scripts = tmp.querySelector("#scripts");
 
+            // Replace the content of the target element
             el.innerHTML = main.innerHTML;
 
+            // Update toast notifications
             toastContainer.innerHTML = toast.innerHTML;
             showAllToast();
 
-            // Load scripts
+            // Dynamically load and execute scripts from the fetched content
             scripts.querySelectorAll("script").forEach(oldScript => {
                 const newScript = document.createElement("script");
                 newScript.textContent = oldScript.textContent;

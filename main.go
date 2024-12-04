@@ -19,7 +19,7 @@ import (
 func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	db, err := initDB("file:./meal_sync.db?_fk=true&_journal=WAL")
+	db, err := initDB("file:./meal_sync.db?_fk=true&_journal=WAL") // Enable foreign keys and use WAL for better concurrency
 	if err != nil {
 		logger.Error("Unable to connect to database", "error", err.Error())
 		os.Exit(1)
@@ -95,7 +95,7 @@ func buildServer(controllers []controller, middlewares []middleware) http.Handle
 		controller.Mount(mux)
 	}
 
-	slices.Reverse(middlewares)
+	slices.Reverse(middlewares) // Reverse the middleware slice to maintain the intended order when chaining
 	var next http.Handler = mux
 	for _, middleware := range middlewares {
 		next = middleware(next)

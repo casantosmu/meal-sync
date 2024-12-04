@@ -30,7 +30,7 @@ func (c ShoppingController) bulkCreatePOST(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	c.View.SetSuccessToast(w, "Ingredients have been added to the sopping list.")
+	c.View.SetSuccessToast(w, "Ingredients added to the sopping list.")
 
 	c.Logger.Info("Shopping items added", "ids", ids)
 	http.Redirect(w, r, fmt.Sprintf("/meals?date=%s", date), http.StatusSeeOther)

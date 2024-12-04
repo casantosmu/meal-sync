@@ -58,6 +58,7 @@ func (m MealModel) GetWeeklyByDate(date string) ([]MealsByDate, error) {
 	meals := make([]MealsByDate, daysInWeek)
 	mealsMap := make(map[string]*MealsByDate, daysInWeek)
 
+	// Use slice to preserve the order of days, and Map for quick access by date
 	for i := range daysInWeek {
 		date := startDate.AddDate(0, 0, i)
 		dateStr := date.Format(DateFormat)
@@ -85,7 +86,6 @@ func (m MealModel) GetWeeklyByDate(date string) ([]MealsByDate, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		mealsMap[m.Date].Meals = append(mealsMap[m.Date].Meals, m)
 	}
 

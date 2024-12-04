@@ -6,13 +6,9 @@ import (
 	"strings"
 )
 
-var (
-	ErrNotFound = errors.New("record not found")
-)
+var ErrNotFound = errors.New("record not found")
 
-const (
-	DateFormat = "2006-01-02"
-)
+const DateFormat = "2006-01-02"
 
 type Models struct {
 	Recipe   RecipeModel
@@ -21,7 +17,7 @@ type Models struct {
 }
 
 func newNullString(s string) sql.NullString {
-	if len(strings.TrimSpace(s)) == 0 {
+	if strings.TrimSpace(s) == "" {
 		return sql.NullString{
 			Valid: false,
 		}
