@@ -64,7 +64,7 @@
         </div>
     </div>
 
-    {{with.Recipe}}
+    {{with .Recipe}}
         <div class="row">
             <div class="col-sm-5 col-md-4">
                 <img
@@ -107,7 +107,7 @@
             <div class="col-sm-7 col-md-8">
                 {{if .Directions}}
                     <h2 class="h5 pt-4">Directions</h2>
-                    {{range.DirectionsToList}}
+                    {{range .DirectionsToList}}
                         <p>{{.}}</p>
                     {{end}}
                 {{end}}
@@ -116,4 +116,4 @@
     {{end}}
 
     {{template "deleteRecipeModal" .}}
-{{ end }}
+{{end}}

@@ -46,14 +46,14 @@
         document.querySelector("#editImageForm").addEventListener("submit", async (event) => {
             event.preventDefault();
 
-            await fetchHTML(modal, "/recipes/{{.Recipe.ID}}/image", {
+            await fetchHTML(editImageModal, "/recipes/{{.Recipe.ID}}/image", {
                 method: "PUT",
                 body: new FormData(event.target),
             });
         });
 
         document.querySelector("#deleteImage")?.addEventListener("click", async (event) => {
-            await fetchHTML(modal, "/recipes/{{.Recipe.ID}}/image", {
+            await fetchHTML(editImageModal, "/recipes/{{.Recipe.ID}}/image", {
                 method: "DELETE",
             });
         });

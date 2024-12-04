@@ -15,8 +15,9 @@ const (
 )
 
 type Models struct {
-	Recipe RecipeModel
-	Meal   MealModel
+	Recipe   RecipeModel
+	Meal     MealModel
+	Shopping ShoppingModel
 }
 
 func newNullString(s string) sql.NullString {

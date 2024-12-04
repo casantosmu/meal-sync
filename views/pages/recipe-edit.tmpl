@@ -135,9 +135,9 @@
 {{end}}
 {{block "scripts" .}}
     <script nonce="{{.Nonce}}">
-        const modal = document.querySelector("#editImageModal");
-        modal.addEventListener("show.bs.modal", async (event) => {
-            await fetchHTML(modal, "/recipes/{{.Recipe.ID}}/image");
+        const editImageModal = document.querySelector("#editImageModal");
+        editImageModal.addEventListener("show.bs.modal", async (event) => {
+            await fetchHTML(editImageModal, "/recipes/{{.Recipe.ID}}/image");
         });
     </script>
 {{end}}

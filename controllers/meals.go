@@ -71,6 +71,7 @@ func (c MealController) listGET(w http.ResponseWriter, r *http.Request) {
 	data := map[string]any{
 		"MealsByDate":  list,
 		"MonthDayYear": startDate.Format("Jan 2, 2006"),
+		"Date":         startDate.Format("2006-01-02"),
 		"PrevDate":     startDate.AddDate(0, 0, -7).Format("2006-01-02"),
 		"NextDate":     startDate.AddDate(0, 0, 7).Format("2006-01-02"),
 	}

@@ -39,6 +39,8 @@ func (c RecipeController) Mount(srv *http.ServeMux) {
 	srv.HandleFunc("GET /recipes/{id}/image", c.imageGET)
 	srv.HandleFunc("PUT /recipes/{id}/image", c.imagePUT)
 	srv.HandleFunc("DELETE /recipes/{id}/image", c.imageDELETE)
+
+	srv.HandleFunc("GET /recipes/{id}/shopping", c.shoppingGET)
 }
 
 func (c RecipeController) createPOST(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +63,7 @@ func (c RecipeController) createPOST(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c RecipeController) listGET(w http.ResponseWriter, r *http.Request) {
-	search := r.PostFormValue("search")
+	search := r.FormValue("search")
 
 	list, err := c.Models.Recipe.Search(search)
 	if err != nil {
@@ -323,6 +325,33 @@ func (c RecipeController) imageDELETE(w http.ResponseWriter, r *http.Request) {
 
 	c.Logger.Info("Image deleted", "id", id, "path", path)
 	http.Redirect(w, r, fmt.Sprintf("/recipes/%d/image", id), http.StatusSeeOther)
+}
+
+func (c RecipeController) shoppingGET(w http.ResponseWriter, r *http.Request) {
+	date := r.URL.Query().Get("date")
+
+	id, err := pathInt(r, "id")
+	if err != nil {
+		if errors.Is(err, ErrPathValueNotFound) {
+			c.View.ServerError(w, r, err)
+			return
+		}
+		c.View.ClientError(w, r, http.StatusBadRequest)
+		return
+	}
+
+	recipe, err := c.Models.Recipe.GetByPk(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			c.View.ClientError(w, r, http.StatusNotFound)
+			return
+		}
+		c.View.ServerError(w, r, err)
+		return
+	}
+
+	data := map[string]any{"Recipe": recipe, "Date": date}
+	c.View.Partial(w, r, "recipe-shopping.tmpl", data)
 }
 
 func validateFileFormat(file multipart.File, ext string) error {

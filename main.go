@@ -39,14 +39,16 @@ func main() {
 	}
 
 	models := models.Models{
-		Recipe: models.RecipeModel{DB: db},
-		Meal:   models.MealModel{DB: db},
+		Recipe:   models.RecipeModel{DB: db},
+		Meal:     models.MealModel{DB: db},
+		Shopping: models.ShoppingModel{DB: db},
 	}
 
 	srv := buildServer(
 		[]controller{
 			controllers.RecipeController{Logger: logger, View: view, Models: models},
 			controllers.MealController{Logger: logger, View: view, Models: models},
+			controllers.ShoppingController{Logger: logger, View: view, Models: models},
 		},
 		[]middleware{
 			middlewares.RecoverPanic(view),

@@ -1,0 +1,69 @@
+{{define "main"}}
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h5">Add to shopping list</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">
+                    Select the ingredients you want to add to your shopping list.
+                </p>
+                <form
+                        id="shoppingListForm"
+                        method="post"
+                        action="/shopping/bulk?date={{.Date}}"
+                        class="row row-cols-3 row-cols-md-4 g-2">
+                    {{range $index, $element := .Recipe.IngredientsToList}}
+                        <div class="col">
+                            <input
+                                    id="ingredient-{{$index}}"
+                                    type="checkbox"
+                                    class="btn-check"
+                                    name="ingredient"
+                                    value="{{$element}}"
+                                    checked
+                            >
+                            <label class="card text-bg-success h-100 w-100" for="ingredient-{{$index}}">
+                                <span class="card-body d-flex justify-content-center align-items-center">
+                                    <span class="card-text text-center">{{$element}}</span>
+                                </span>
+                            </label>
+                        </div>
+                    {{end}}
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="shoppingListSubmit" type="submit" class="btn btn-success" form="shoppingListForm">
+                    Add to shopping list
+                </button>
+            </div>
+        </div>
+    </div>
+{{end}}
+{{define "scripts"}}
+    <script>
+        const shoppingListForm = document.querySelector("#shoppingListForm");
+        const submitButton = document.querySelector("#shoppingListSubmit");
+
+        let checkedCount = shoppingListForm.querySelectorAll("input[type='checkbox']:checked").length;
+        shoppingListForm.addEventListener("click", (event) => {
+            if (event.target.type !== "checkbox") {
+                return;
+            }
+
+            const label = event.target.nextElementSibling;
+            if (event.target.checked) {
+                label.classList.add("text-bg-success");
+                label.classList.remove("text-bg-secondary");
+                checkedCount++;
+            } else {
+                label.classList.remove("text-bg-success");
+                label.classList.add("text-bg-secondary");
+                checkedCount--;
+            }
+
+            submitButton.disabled = checkedCount === 0;
+        });
+    </script>
+{{end}}
