@@ -23,7 +23,7 @@ func (r Recipe) ImageURLOrDefault() string {
 }
 
 func (r Recipe) IngredientsToList() []string {
-	lines := strings.Split(r.Ingredients, "\n")
+	lines := strings.Split(r.Ingredients, "\r\n")
 	var ingredients = []string{}
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
@@ -31,25 +31,17 @@ func (r Recipe) IngredientsToList() []string {
 			ingredients = append(ingredients, trimmed)
 		}
 	}
-	if len(ingredients) == 0 {
-		return []string{""}
-	}
 	return ingredients
 }
 
 func (r Recipe) DirectionsToList() []string {
-	lines := strings.FieldsFunc(r.Directions, func(r rune) bool {
-		return r == '\n' || r == '\r'
-	})
+	lines := strings.Split(r.Directions, "\r\n")
 	var directions = []string{}
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
 		if trimmed != "" {
 			directions = append(directions, trimmed)
 		}
-	}
-	if len(directions) == 0 {
-		return []string{""}
 	}
 	return directions
 }
