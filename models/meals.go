@@ -69,7 +69,7 @@ func (m MealModel) GetWeeklyByDate(date string) ([]MealsByDate, error) {
 		mealsMap[dateStr] = &meals[i]
 	}
 
-	query := `SELECT m.meal_id, m.date, r.recipe_id, r.title, COALESCE(img_url, '')
+	query := `SELECT m.meal_id, m.date, r.recipe_id, r.title, COALESCE(r.img_url, ''), COALESCE(r.ingredients, '')
 	FROM meals m
 	JOIN recipes r ON m.recipe_id = r.recipe_id
 	WHERE m.date BETWEEN ? AND ?;`
@@ -82,7 +82,7 @@ func (m MealModel) GetWeeklyByDate(date string) ([]MealsByDate, error) {
 
 	for rows.Next() {
 		var m Meal
-		err := rows.Scan(&m.ID, &m.Date, &m.Recipe.ID, &m.Recipe.Title, &m.Recipe.ImageURL)
+		err := rows.Scan(&m.ID, &m.Date, &m.Recipe.ID, &m.Recipe.Title, &m.Recipe.ImageURL, &m.Recipe.Ingredients)
 		if err != nil {
 			return nil, err
 		}
