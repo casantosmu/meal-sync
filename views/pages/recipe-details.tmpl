@@ -86,15 +86,15 @@
                     <h2 class="h5">Ingredients</h2>
                     <ul class="list-group list-group-flush">
                         {{range $index, $element := .IngredientsToList}}
-                            <li class="list-group-item">
+                            <li class="list-group-item d-flex">
                                 <input
-                                        class="form-check-input me-1"
+                                        class="form-check-input me-2"
                                         type="checkbox"
                                         value=""
                                         id="checkbox{{$index}}"
                                 >
                                 <label
-                                        class="form-check-label stretched-link"
+                                        class="form-check-label flex-grow-1"
                                         for="checkbox{{$index}}"
                                 >
                                     {{$element}}
