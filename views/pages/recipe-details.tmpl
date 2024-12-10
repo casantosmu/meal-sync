@@ -106,9 +106,14 @@
             </div>
             <div class="col-sm-7 col-md-8">
                 {{if .Directions}}
-                    <h2 class="h5 pt-4">Directions</h2>
-                    {{range .DirectionsToList}}
-                        <p>{{.}}</p>
+                    <h2 class="h5 pt-4 pt-sm-0">Directions</h2>
+                    {{range .DirectionsToGroups}}
+                        <h3 class="h6">{{.Heading}}</h3>
+                        <ul>
+                            {{range .Directions}}
+                                <li>{{.}}</li>
+                            {{end}}
+                        </ul>
                     {{end}}
                 {{end}}
             </div>

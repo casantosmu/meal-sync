@@ -6,6 +6,11 @@ import (
 	"strings"
 )
 
+type DirectionGroup struct {
+	Heading    string
+	Directions []string
+}
+
 type Recipe struct {
 	ID          int
 	Title       string
@@ -34,16 +39,49 @@ func (r Recipe) IngredientsToList() []string {
 	return ingredients
 }
 
-func (r Recipe) DirectionsToList() []string {
-	lines := strings.Split(r.Directions, "\r\n")
-	var directions = []string{}
-	for _, line := range lines {
-		trimmed := strings.TrimSpace(line)
-		if trimmed != "" {
-			directions = append(directions, trimmed)
+func (r Recipe) DirectionsToGroups() []DirectionGroup {
+	isHeading := func(line string, index int, lines []string) bool {
+		if !strings.HasSuffix(line, ":") {
+			return false
 		}
+		prevEmpty := index == 0 || strings.TrimSpace(lines[index-1]) == ""
+		nextEmpty := index+1 < len(lines) && strings.TrimSpace(lines[index+1]) == ""
+		return prevEmpty && nextEmpty
 	}
-	return directions
+	isEmpty := func(dg DirectionGroup) bool {
+		return dg.Heading == "" && len(dg.Directions) == 0
+	}
+
+	lines := strings.Split(r.Directions, "\r\n")
+
+	groups := []DirectionGroup{}
+	currentGroup := DirectionGroup{}
+
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+
+		if isHeading(trimmed, i, lines) {
+			if !isEmpty(currentGroup) {
+				groups = append(groups, currentGroup)
+			}
+			currentGroup = DirectionGroup{
+				Heading:    trimmed,
+				Directions: []string{},
+			}
+			continue
+		}
+
+		currentGroup.Directions = append(currentGroup.Directions, trimmed)
+	}
+
+	if !isEmpty(currentGroup) {
+		groups = append(groups, currentGroup)
+	}
+
+	return groups
 }
 
 type RecipeModel struct {

@@ -45,37 +45,76 @@ func TestIngredientToList(t *testing.T) {
 	}
 }
 
-func TestDirectionsToList(t *testing.T) {
+func TestDirectionsToGroups(t *testing.T) {
 	testCases := []struct {
 		name     string
 		input    string
-		expected []string
+		expected []models.DirectionGroup
 	}{
 		{
-			name:     "basic",
-			input:    "Preheat oven to 350F.\r\nMix ingredients in a bowl.\r\nBake for 20 minutes.",
-			expected: []string{"Preheat oven to 350F.", "Mix ingredients in a bowl.", "Bake for 20 minutes."},
+			name:  "basic",
+			input: "Preheat oven to 350F.\r\nMix ingredients in a bowl.\r\nBake for 20 minutes.",
+			expected: []models.DirectionGroup{
+				{
+					Heading:    "",
+					Directions: []string{"Preheat oven to 350F.", "Mix ingredients in a bowl.", "Bake for 20 minutes."},
+				},
+			},
+		},
+		{
+			name:  "basic with heading",
+			input: "Title 1:\r\n\r\nPreheat oven to 350F.\r\nMix ingredients in a bowl.\r\nBake for 20 minutes.",
+			expected: []models.DirectionGroup{
+				{
+					Heading:    "Title 1:",
+					Directions: []string{"Preheat oven to 350F.", "Mix ingredients in a bowl.", "Bake for 20 minutes."},
+				},
+			},
+		},
+		{
+			name:  "multiple direction groups",
+			input: "Title 1:\r\n\r\nPreheat oven to 350F.\r\nMix ingredients in a bowl.\r\n\r\nTitle 2:\r\n\r\nBake for 20 minutes.",
+			expected: []models.DirectionGroup{
+				{
+					Heading:    "Title 1:",
+					Directions: []string{"Preheat oven to 350F.", "Mix ingredients in a bowl."},
+				},
+				{
+					Heading:    "Title 2:",
+					Directions: []string{"Bake for 20 minutes."},
+				},
+			},
 		},
 		{
 			name:     "empty",
 			input:    "",
-			expected: []string{},
+			expected: []models.DirectionGroup{},
 		},
 		{
-			name:     "extra spaces",
-			input:    "     Preheat oven to 350F.\r\nMix ingredients in a bowl.     \r\n   Bake for 20 minutes.   ",
-			expected: []string{"Preheat oven to 350F.", "Mix ingredients in a bowl.", "Bake for 20 minutes."},
+			name:  "directions with extra spaces",
+			input: "    Preheat oven to 350F.\r\nMix ingredients in a bowl.   \r\n   Bake for 20 minutes.   ",
+			expected: []models.DirectionGroup{
+				{
+					Heading:    "",
+					Directions: []string{"Preheat oven to 350F.", "Mix ingredients in a bowl.", "Bake for 20 minutes."},
+				},
+			},
 		},
 		{
-			name:     "multiple newlines",
-			input:    "Preheat oven.\r\n\r\nMix ingredients.\r\n\r\nBake.",
-			expected: []string{"Preheat oven.", "Mix ingredients.", "Bake."},
+			name:  "directions with multiple newlines",
+			input: "Preheat oven.\r\n\r\nMix ingredients.\r\n\r\nBake.",
+			expected: []models.DirectionGroup{
+				{
+					Heading:    "",
+					Directions: []string{"Preheat oven.", "Mix ingredients.", "Bake."},
+				},
+			},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := models.Recipe{Directions: tc.input}.DirectionsToList()
+			got := models.Recipe{Directions: tc.input}.DirectionsToGroups()
 			if !reflect.DeepEqual(got, tc.expected) {
 				t.Errorf("Test case: %s - expected %v, but got %v", tc.name, tc.expected, got)
 			}
